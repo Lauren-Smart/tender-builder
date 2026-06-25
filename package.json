@@ -1,0 +1,9 @@
+{
+  "name": "sce-tender-builder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SCE Tender Builder — internal tool for generating tender/proposal Word documents from a Notion content library.",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}

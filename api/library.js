@@ -12,7 +12,7 @@
 // environment variable (NOTION_TOKEN) and only ever returns the already-public,
 // already-reshaped tender content to the browser.
 
-const NOTION_VERSION = '2022-06-28';
+const NOTION_VERSION = '2025-09-03';
 const DATA_SOURCE_ID = process.env.NOTION_DATA_SOURCE_ID || '379063cc-a383-8042-8559-000bb1987a05';
 
 // Cache the reshaped library in memory between invocations on the same warm

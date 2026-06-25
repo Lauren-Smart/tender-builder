@@ -1484,7 +1484,7 @@ async function buildDocument(state, library) {
   function h2num(sectionNum, subNum, text) {
     return new Paragraph({
       spacing: { before: 280, after: 120 },
-      children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: FONT_HEADING, size: H2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
+      children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
     });
   }
 

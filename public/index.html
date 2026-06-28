@@ -1473,6 +1473,15 @@ async function buildDocument(state, library) {
       children: [new Paragraph({ children: [new TextRun({ text: text || '', font: FONT_BODY, size: 18, color: DARK_GREY })] })]
     });
   }
+  function hyperlinkPara(label, url, opts = {}) {
+    return new Paragraph({
+      spacing: { before: 80, after: 80 },
+      children: [new ExternalHyperlink({
+        link: url,
+        children: [new TextRun({ text: label, font: FONT_BODY, size: opts.size || BODY_SIZE, color: SKY_BLUE, underline: {}, ...opts })]
+      })]
+    });
+  }
   function bulletLink(label, url, opts = {}) {
     return new Paragraph({
 spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },

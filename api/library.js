@@ -105,7 +105,7 @@ function reshapeLibrary(rows) {
 
     if (blockName.toLowerCase().startsWith('warranty data')) {
       const parsed = parseWarrantyContent(content);
-      if (parsed) warrantyData.push(parsed);
+      if (parsed) warrantyData.push(parsed); continue;
       // Warranty rows are also valid generic content blocks (some callers look
       // them up via findContentBlock), so fall through and let them get added
       // below as well.

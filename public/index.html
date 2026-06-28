@@ -523,7 +523,7 @@
       </div>
       <div class="check-group">
         <div class="check-group-title">Company</div>
-        <label class="check-item" onclick="toggle(this)"><input type="checkbox" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Referees</strong></div></label>
+        <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="referees" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Referees</strong></div></label>
       </div>
       <div class="check-group">
         <div class="check-group-title">Testimonials</div>
@@ -1286,6 +1286,7 @@ function gatherFormState() {
     team: [],
     optionalSections: [],
     testimonials: [],
+refereesEnabled: false,
     proposal: null,
     postInstall: {
       monitoring: document.getElementById('pi-monitoring').classList.contains('checked'),
@@ -1374,6 +1375,8 @@ function gatherFormState() {
       });
     }
   });
+const refereesCb = document.querySelector('#step-5 input[data-key="referees"]');
+if (refereesCb && refereesCb.closest('.check-item').classList.contains('checked')) { state.refereesEnabled = true; }
 
   // Solution Proposal
   if (proposalOn) {
@@ -1470,10 +1473,12 @@ async function buildDocument(state, library) {
       children: [new Paragraph({ children: [new TextRun({ text: text || '', font: FONT_BODY, size: 18, color: DARK_GREY })] })]
     });
   }
-  function hyperlinkPara(label, url, opts = {}) {
+  function bulletLink(label, url, opts = {}) {
     return new Paragraph({
-      spacing: { before: 80, after: 80 },
-      children: [new ExternalHyperlink({
+spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
+      children: [
+        new TextRun({ text: '•  ', font: FONT_BODY, size: BODY_SIZE, color: SKY_BLUE }),
+        new ExternalHyperlink({
         link: url,
         children: [new TextRun({ text: label, font: FONT_BODY, size: opts.size || BODY_SIZE, color: SKY_BLUE, underline: {}, ...opts })]
       })]
@@ -1643,7 +1648,7 @@ async function buildDocument(state, library) {
 
       if (grouped) {
         if (grouped.length) {
-          grouped.forEach(b => internalChildren.push(bullet(b.blockName)));
+          grouped.forEach(b => { const parsed = !isPlaceholderLink(b.content) ? parseMarkdownLink(b.content) : null; if (parsed) { internalChildren.push(bulletLink(parsed.label, parsed.url)); } else { internalChildren.push(bullet(b.blockName)); } });
         } else {
           internalChildren.push(body(`[None of the expected documents for "${inclusionName}" were found in the library yet]`, { color: 'B41E1E', italics: true }));
         }
@@ -1981,19 +1986,38 @@ async function buildDocument(state, library) {
 
   // ── Section 7: References & Testimonials ──
   function buildTestimonialsSection() {
-    if (!state.testimonials.length) return;
+    if (!state.testimonials.length && !state.refereesEnabled) return;
     internalChildren.push(h1('7. References & Testimonials'));
-    const introBlock = findContentBlock(library, 'References/Testimonials Blurb');
-    if (introBlock && introBlock.content) {
-      introBlock.content.split('\n\n').forEach(para => { if (para.trim()) internalChildren.push(body(para.trim())); });
-      internalChildren.push(gap());
-    }
-    for (const t of state.testimonials) {
-      const fullBlock = library.testimonials.find(tb => tb.blockName.includes(t.name));
-      if (fullBlock && fullBlock.content) {
-        fullBlock.content.split('\n\n').forEach(para => { if (para.trim()) internalChildren.push(body(para.trim(), { italics: true })); });
+    if (state.refereesEnabled) {
+      const refBlock = findContentBlock(library, 'Referees Blurb');
+      if (refBlock && refBlock.content) {
+        internalChildren.push(h2('Referees'));
+        const lines = refBlock.content.split('\n').filter(l => l.trim());
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('•')) { internalChildren.push(bullet(trimmed.replace(/^•\s*/, ''))); }
+          else { internalChildren.push(body(trimmed)); }
+        });
+        internalChildren.push(gap());
+      } else {
+        internalChildren.push(body('[Content for "Referees Blurb" not found in library]', { color: 'B41E1E', italics: true }));
+        internalChildren.push(gap());
       }
-      internalChildren.push(gap());
+    }
+    if (state.testimonials.length) {
+      if (state.refereesEnabled) internalChildren.push(h2('Testimonials'));
+      const introBlock = findContentBlock(library, 'References/Testimonials Blurb');
+      if (introBlock && introBlock.content) {
+        introBlock.content.split('\n\n').forEach(para => { if (para.trim()) internalChildren.push(body(para.trim())); });
+        internalChildren.push(gap());
+      }
+      for (const t of state.testimonials) {
+        const fullBlock = library.testimonials.find(tb => tb.blockName.includes(t.name));
+        if (fullBlock && fullBlock.content) {
+          fullBlock.content.split('\n\n').forEach(para => { if (para.trim()) internalChildren.push(body(para.trim(), { italics: true })); });
+        }
+        internalChildren.push(gap());
+      }
     }
   }
 

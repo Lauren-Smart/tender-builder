@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     }
 
     const rows = await fetchAllRows(token);
-    const library = reshapeLibrary(rows);
+    const library = await reshapeLibrary(rows);
 
     CACHE = library;
     CACHE_AT = Date.now();
@@ -83,13 +83,33 @@ async function fetchAllRows(token) {
   return rows;
 }
 
+// Downloads an image from a URL (e.g. a Notion-hosted S3 link) and returns it
+// as a base64 data URL the frontend can decode straight into image bytes,
+// without the browser needing to fetch the (often time-limited, CORS-locked)
+// source URL itself. Returns null on any failure — callers must treat that as
+// "no image available" and fall back to a text link instead, never throw.
+async function fetchImageAsDataUrl(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const contentType = resp.headers.get('content-type') || 'image/png';
+    const buffer = await resp.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    return `data:${contentType};base64,${base64}`;
+  } catch (err) {
+    console.error('fetchImageAsDataUrl error:', err);
+    return null;
+  }
+}
+
 // ── Reshaping Notion pages into the library contract ─────────────────────────
 
-function reshapeLibrary(rows) {
+async function reshapeLibrary(rows) {
   const contentBlocks = [];
   const linkBlocks = [];
   const warrantyData = [];
   const testimonials = [];
+  const images = {}; // blockName -> base64 data URL, for Linked Graphic blocks with a real file
 
   for (const row of rows) {
     const props = row.properties || {};
@@ -104,11 +124,13 @@ function reshapeLibrary(rows) {
     const content = getRichText(props['Content']);
 
     if (blockName.toLowerCase().startsWith('warranty data')) {
+      // Warranty rows are fully represented by the structured warrantyData
+      // entry below. They must NOT also be added as a plain content block —
+      // the raw Content text includes an internal "Notes:" line that should
+      // never appear in a generated tender document.
       const parsed = parseWarrantyContent(content);
-      if (parsed) warrantyData.push(parsed); continue;
-      // Warranty rows are also valid generic content blocks (some callers look
-      // them up via findContentBlock), so fall through and let them get added
-      // below as well.
+      if (parsed) warrantyData.push(parsed);
+      continue;
     }
 
     if (blockName.toLowerCase().startsWith('testimonial')) {
@@ -117,12 +139,22 @@ function reshapeLibrary(rows) {
 
     if (blockType === 'Link' || blockType === 'Linked Graphic') {
       linkBlocks.push({ blockName, content: content.trim() });
+      // For Linked Graphic blocks specifically, also try to download the real
+      // image bytes (from the "Files & media" property) so the frontend can
+      // embed the picture directly in the generated document, not just link to it.
+      if (blockType === 'Linked Graphic') {
+        const fileUrl = getFileUrl(props['Files & media']);
+        if (fileUrl) {
+          const dataUrl = await fetchImageAsDataUrl(fileUrl);
+          if (dataUrl) images[blockName] = dataUrl;
+        }
+      }
     } else {
       contentBlocks.push({ blockName, content: normalizeParagraphs(content) });
     }
   }
 
-  return { contentBlocks, linkBlocks, warrantyData, testimonials };
+  return { contentBlocks, linkBlocks, warrantyData, testimonials, images };
 }
 
 // Notion stores multi-paragraph text with literal "<br>" tags. The frontend
@@ -170,4 +202,17 @@ function getRichText(prop) {
 function getSelect(prop) {
   if (!prop || prop.type !== 'select' || !prop.select) return '';
   return prop.select.name || '';
+}
+
+// Reads the first file's URL out of a Notion "files" property. Notion-hosted
+// uploads come back as { type: 'file', file: { url, expiry_time } }; files
+// linked to an external URL come back as { type: 'external', external: { url } }.
+// Returns null if the property is empty or the shape doesn't include a URL —
+// callers must treat a null return as "no image available" rather than throw.
+function getFileUrl(prop) {
+  if (!prop || prop.type !== 'files' || !Array.isArray(prop.files) || !prop.files.length) return null;
+  const first = prop.files[0];
+  if (first.type === 'file' && first.file && first.file.url) return first.file.url;
+  if (first.type === 'external' && first.external && first.external.url) return first.external.url;
+  return null;
 }

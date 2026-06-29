@@ -326,7 +326,6 @@
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Safety Record</strong><span>3-year LTI table</span></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Overall Quality & Insurance</strong><span>ISO 9001, 14001, 45001</span></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Subcontractors & Advisors</strong></div><span class="static-badge">Static</span></label>
-        <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>National Distribution Partners</strong><span>Solar Juice & MMEM</span></div><span class="static-badge">Static</span></label>
       </div>
       <div class="nav-buttons">
         <button class="btn btn-secondary" onclick="prev()">← Back</button>
@@ -517,7 +516,6 @@
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-overview" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Capability Overview</strong><span>Stats, records, average variation rate</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-challenges" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Challenges We Solve</strong><span>Multi-contractor coordination, geographic spread, documentation</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-delivery" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Our Delivery Model</strong><span>Integrated teams, Procore, national supply chain</span></div></label>
-        <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-programs" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Representative Programs</strong><span>Bunnings, KFC, Officeworks, Viva Energy and more</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-quotes" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Client Quotes</strong><span>Southern Steel, Bunnings, Officeworks</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-table" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Multi-Site Rollout Experience Table</strong><span>Visual summary of rollout projects by customer</span></div></label>
       </div>
@@ -1355,7 +1353,6 @@ refereesEnabled: false,
     'msr-overview': 'Multi-Site Rollout — Capability Overview',
     'msr-challenges': 'Multi-Site Rollout — Challenges We Solve',
     'msr-delivery': 'Multi-Site Rollout — Our Delivery Model',
-    'msr-programs': 'Multi-Site Rollout — Representative Programs',
     'msr-quotes': 'Multi-Site Rollout — Client Quotes',
     'msr-table': 'Multi-Site Rollout Experience Table',
   };
@@ -1650,6 +1647,58 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
             internalChildren.push(gap());
             internalChildren.push(hyperlinkPara(parsed.label, parsed.url));
           }
+        }
+        internalChildren.push(gap());
+        continue;
+      }
+
+      if (inclusionName === 'Overall Quality & Insurance') {
+        const isoBlock = findContentBlock(library, 'ISO Certifications Statement');
+        if (isoBlock && isoBlock.content) {
+          isoBlock.content.split('\n\n').forEach(para => { if (para.trim()) internalChildren.push(body(para.trim())); });
+        } else {
+          internalChildren.push(body('[Content for "ISO Certifications Statement" not found in library]', { color: 'B41E1E', italics: true }));
+        }
+        const insuranceBlock = findLinkBlock(library, 'All Insurances Link');
+        if (insuranceBlock && !isPlaceholderLink(insuranceBlock.content)) {
+          const parsed = parseMarkdownLink(insuranceBlock.content);
+          if (parsed) {
+            internalChildren.push(gap());
+            internalChildren.push(hyperlinkPara(parsed.label, parsed.url));
+          }
+        }
+        internalChildren.push(gap());
+        continue;
+      }
+
+      if (inclusionName === 'Capability Statement') {
+        const blurbBlock = findContentBlock(library, 'Capability Statement Blurb');
+        if (blurbBlock && blurbBlock.content) {
+          // Intro line only — the old "•  All Capability Documents" folder
+          // listing is superseded by the two direct document links below.
+          const introLine = blurbBlock.content.split('\n')[0];
+          if (introLine && introLine.trim()) internalChildren.push(body(introLine.trim()));
+        }
+        const imageDataUrl = library.images && library.images['Capability Statement Graphic'];
+        if (imageDataUrl) {
+          const imgData = base64ToArrayBuffer(imageDataUrl);
+          if (imgData) {
+            internalChildren.push(gap());
+            internalChildren.push(new Paragraph({ children: [new ImageRun({ data: imgData, transformation: { width: 560, height: 315 }, type: 'png' })] }));
+          }
+        }
+        internalChildren.push(gap());
+        const docLinks = [
+          findLinkBlock(library, 'Capability Statement Link'),
+          findLinkBlock(library, 'Customer Showcase'),
+        ].filter(b => b && !isPlaceholderLink(b.content));
+        if (docLinks.length) {
+          docLinks.forEach(b => {
+            const parsed = parseMarkdownLink(b.content);
+            if (parsed) internalChildren.push(bulletLink(parsed.label, parsed.url));
+          });
+        } else {
+          internalChildren.push(body('[No capability statement documents found in library yet]', { color: 'B41E1E', italics: true }));
         }
         internalChildren.push(gap());
         continue;
@@ -2166,6 +2215,22 @@ function fileToArrayBuffer(file) {
     reader.onerror = () => resolve(null);
     reader.readAsArrayBuffer(file);
   });
+}
+
+// Decodes a "data:image/png;base64,...." string (as supplied by /api/library
+// for Linked Graphic blocks) into the raw bytes docx's ImageRun needs.
+// Returns null on any malformed input rather than throwing.
+function base64ToArrayBuffer(dataUrl) {
+  if (!dataUrl) return null;
+  try {
+    const base64 = dataUrl.split(',')[1] || dataUrl;
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  } catch (err) {
+    return null;
+  }
 }
 
 function downloadBlob(blob, filename) {

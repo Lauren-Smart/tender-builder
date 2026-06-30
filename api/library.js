@@ -122,6 +122,7 @@ async function reshapeLibrary(rows) {
 
     const blockType = getSelect(props['Block Type']);
     const content = getRichText(props['Content']);
+    const categories = getMultiSelect(props['Category']);
 
     if (blockName.toLowerCase().startsWith('warranty data')) {
       // Warranty rows are fully represented by the structured warrantyData
@@ -134,11 +135,11 @@ async function reshapeLibrary(rows) {
     }
 
     if (blockName.toLowerCase().startsWith('testimonial')) {
-      testimonials.push({ blockName, content: normalizeParagraphs(content) });
+      testimonials.push({ blockName, content: normalizeParagraphs(content), categories });
     }
 
     if (blockType === 'Link' || blockType === 'Linked Graphic') {
-      linkBlocks.push({ blockName, content: content.trim() });
+      linkBlocks.push({ blockName, content: content.trim(), categories });
       // For Linked Graphic blocks specifically, also try to download the real
       // image bytes (from the "Files & media" property) so the frontend can
       // embed the picture directly in the generated document, not just link to it.
@@ -150,7 +151,7 @@ async function reshapeLibrary(rows) {
         }
       }
     } else {
-      contentBlocks.push({ blockName, content: normalizeParagraphs(content) });
+      contentBlocks.push({ blockName, content: normalizeParagraphs(content), categories });
     }
   }
 
@@ -196,12 +197,27 @@ function getTitle(prop) {
 
 function getRichText(prop) {
   if (!prop || prop.type !== 'rich_text' || !Array.isArray(prop.rich_text)) return '';
-  return prop.rich_text.map(t => t.plain_text).join('');
+  // Each rich_text element may have a plain_text label AND a separate href/link.url
+  // (when the user entered it as an inline Notion link rather than typing raw markdown).
+  // We must capture both and reconstruct [label](url) format, otherwise the URL is
+  // silently discarded and parseMarkdownLink() on the frontend returns null.
+  return prop.rich_text.map(t => {
+    const text = t.plain_text || '';
+    const url = t.href || (t.text && t.text.link && t.text.link.url) || null;
+    if (url && text) return `[${text}](${url})`;
+    return text;
+  }).join('');
 }
 
 function getSelect(prop) {
   if (!prop || prop.type !== 'select' || !prop.select) return '';
   return prop.select.name || '';
+}
+
+// Returns the array of selected option names for a multi-select property.
+function getMultiSelect(prop) {
+  if (!prop || prop.type !== 'multi_select' || !Array.isArray(prop.multi_select)) return [];
+  return prop.multi_select.map(o => o.name).filter(Boolean);
 }
 
 // Reads the first file's URL out of a Notion "files" property. Notion-hosted

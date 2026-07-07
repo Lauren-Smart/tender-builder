@@ -1460,7 +1460,8 @@ async function buildDocument(state, library) {
   // Sections claim their number as they render, so toggling sections on/off
   // never leaves gaps or wrong numbers.
   let sectionCounter = 0;
-  const nextSectionNum = () => ++sectionCounter;
+  let subsectionCounter = 0;
+  const nextSectionNum = () => { subsectionCounter = 0; return ++sectionCounter; };
 
   // Insert a page break before a new section — but only when there is prior
   // content and we haven't just added one. Avoids blank pages when optional
@@ -1468,6 +1469,7 @@ async function buildDocument(state, library) {
   let lastBreakAt = -1;
   function sectionBreak() {
     if (internalChildren.length > 0 && lastBreakAt !== internalChildren.length) {
+        internalChildren.push(pageBreak());
         lastBreakAt = internalChildren.length;
     }
   }
@@ -1542,6 +1544,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // Numbered sub-heading, e.g. "4.1 Compliance Statement"
   function h2num(sectionNum, subNum, text) {
     return new Paragraph({
+      heading: HeadingLevel.HEADING_2,
       spacing: { before: 280, after: 120 },
       children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
     });
@@ -1553,6 +1556,16 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 240, after: 100 },
       children: [new TextRun({ text, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
+    });
+  }
+
+  // Auto-numbered H3 subsection heading, e.g. "1.1  Policies", "1.2  Modern Slavery Policy".
+  // Uses the current section number and increments the subsection counter automatically.
+  function h3num(text) {
+    return new Paragraph({
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 240, after: 100 },
+      children: [new TextRun({ text: `${sectionCounter}.${++subsectionCounter}  ${text}`, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
     });
   }
 
@@ -1692,7 +1705,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(h1(`${nextSectionNum()}. Key Documents`));
 
     // Policies — driven by Notion Category = "Policy"
-    internalChildren.push(h3('Policies'));
+    internalChildren.push(h3num('Policies'));
     const policyLinks = findLinkBlocksByCategory(library, 'Policy');
     if (policyLinks.length) {
       policyLinks.forEach(b => {
@@ -1706,7 +1719,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(gap());
 
     // Modern Slavery Policy — single link block
-    internalChildren.push(h3('Modern Slavery Policy'));
+    internalChildren.push(h3num('Modern Slavery Policy'));
     const msp = findLinkBlock(library, 'Modern Slavery Policy');
     if (msp && !isPlaceholderLink(msp.content)) {
       const parsed = parseMarkdownLink(msp.content);
@@ -1717,7 +1730,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(gap());
 
     // Procedures — driven by Notion Category = "Procedures"
-    internalChildren.push(h3('Procedures'));
+    internalChildren.push(h3num('Procedures'));
     const procLinks = findLinkBlocksByCategory(library, 'Procedures');
     if (procLinks.length) {
       procLinks.forEach(b => {
@@ -1731,7 +1744,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(gap());
 
     // Insurances
-    internalChildren.push(h3('Insurances'));
+    internalChildren.push(h3num('Insurances'));
     const ins = findLinkBlock(library, 'All Insurances');
     if (ins && !isPlaceholderLink(ins.content)) {
       const parsed = parseMarkdownLink(ins.content);
@@ -1745,7 +1758,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── Key People content — rendered inside the Additional Information section ──
   function buildKeyPeopleContent() {
-    internalChildren.push(h3('Key People'));
+    internalChildren.push(h3num('Key People'));
     const block = findContentBlock(library, 'Key People');
     if (block && block.content) {
       const entries = block.content.split('\n\n').filter(e => e.trim());
@@ -1788,14 +1801,14 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(h1(`${nextSectionNum()}. About Smart Commercial Energy`));
 
     if (has('Company History')) {
-      internalChildren.push(h3('Company History'));
+      internalChildren.push(h3num('Company History'));
       renderContentBlock('Company History Blurb');
     }
 
     // (Key People has moved to "6. Additional Information" — see buildKeyPeopleContent)
 
     if (has('Key Customers')) {
-      internalChildren.push(h3('Key Customers'));
+      internalChildren.push(h3num('Key Customers'));
       const block = findContentBlock(library, 'Key Customers');
       if (block && block.content) {
         renderRichContent(block.content).forEach(p => internalChildren.push(p));
@@ -1809,7 +1822,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (has('Capability Statement')) {
-      internalChildren.push(h3('Capability Statement'));
+      internalChildren.push(h3num('Capability Statement'));
       const blurbBlock = findContentBlock(library, 'Capability Statement Blurb');
       if (blurbBlock && blurbBlock.content) {
         const introLine = blurbBlock.content.split('\n')[0];
@@ -1838,22 +1851,22 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (has('Company Initiatives — Giving Back')) {
-      internalChildren.push(h3('Company Initiatives – Giving Back'));
+      internalChildren.push(h3num('Company Initiatives – Giving Back'));
       renderContentBlock('Company Initiatives - Giving Back Blurb');
     }
 
     if (has('End of Life Process')) {
-      internalChildren.push(h3('End of Life Process'));
+      internalChildren.push(h3num('End of Life Process'));
       renderContentBlock('End of Life Process Blurb');
     }
 
     if (has('Modern Slavery Statement')) {
-      internalChildren.push(h3('Modern Slavery Statement'));
+      internalChildren.push(h3num('Modern Slavery Statement'));
       renderContentBlock('Modern Slavery Statement');
     }
 
     if (has('Sustainability Reporting')) {
-      internalChildren.push(h3('Sustainability Reporting'));
+      internalChildren.push(h3num('Sustainability Reporting'));
       renderContentBlock('Sustainability Reporting Blurb');
       const certBlock = findLinkBlock(library, 'Sustainability Certificate');
       if (certBlock && !isPlaceholderLink(certBlock.content)) {
@@ -1875,33 +1888,33 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(h1(`${nextSectionNum()}. Project Capabilities & Resources`));
 
     if (has('Company Resources & Capacity')) {
-      internalChildren.push(h3('Company Resources & Capacity'));
+      internalChildren.push(h3num('Company Resources & Capacity'));
       renderContentBlock('Company Resources & Capacity');
     }
 
     if (has('Project Team')) {
-      internalChildren.push(h3('Project Team'));
+      internalChildren.push(h3num('Project Team'));
       renderContentBlock('Projects Team');
     }
 
     if (has('Engineering Team')) {
-      internalChildren.push(h3('Engineering Team'));
+      internalChildren.push(h3num('Engineering Team'));
       renderContentBlock('Engineering Team');
     }
 
     if (has('Engineering Capabilities')) {
-      internalChildren.push(h3('Engineering Capabilities'));
+      internalChildren.push(h3num('Engineering Capabilities'));
       renderContentBlock('Engineering Capabilities');
     }
 
     if (has('Specific Project Team Resources')) {
-      internalChildren.push(h3('Specific Project Team Resources'));
+      internalChildren.push(h3num('Specific Project Team Resources'));
       renderContentBlock('Specific Project Team Resources');
     }
 
     // Nominated Project Team — auto-generated from selected team members
     if (state.team.length) {
-      internalChildren.push(h3('Nominated Project Team'));
+      internalChildren.push(h3num('Nominated Project Team'));
       internalChildren.push(new Table({
         width: { size: CW, type: WidthType.DXA }, columnWidths: [4819, 4819],
         rows: [
@@ -1913,17 +1926,17 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (has('Subcontractors & Advisors')) {
-      internalChildren.push(h3('Subcontractors & Advisors'));
+      internalChildren.push(h3num('Subcontractors & Advisors'));
       renderContentBlock('Subcontractors & Advisors');
     }
 
     if (has('Safety Approach')) {
-      internalChildren.push(h3('Safety Approach'));
+      internalChildren.push(h3num('Safety Approach'));
       renderContentBlock('Safety Approach Blurb');
     }
 
     if (has('Safety Record')) {
-      internalChildren.push(h3('Safety Record'));
+      internalChildren.push(h3num('Safety Record'));
       const block = findContentBlock(library, 'Safety Record — LTI Table') || findContentBlock(library, 'Safety Record');
       if (block && block.content) {
         const lines = block.content.split('\n').filter(l => l.trim());
@@ -1950,12 +1963,12 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (has('Training & Development')) {
-      internalChildren.push(h3('Training & Development'));
+      internalChildren.push(h3num('Training & Development'));
       renderContentBlock('Training & Development');
     }
 
     if (has('Overall Quality & Insurance')) {
-      internalChildren.push(h3('Overall Quality & Insurance'));
+      internalChildren.push(h3num('Overall Quality & Insurance'));
       const isoBlock = findContentBlock(library, 'ISO Certifications Statement');
       if (isoBlock && isoBlock.content) {
         renderRichContent(isoBlock.content).forEach(p => internalChildren.push(p));
@@ -2236,7 +2249,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     if (state.refereesEnabled) {
       const refBlock = findContentBlock(library, 'Referees Blurb');
       if (refBlock && refBlock.content) {
-        internalChildren.push(h3('Referees'));
+        internalChildren.push(h3num('Referees'));
         const lines = refBlock.content.split('\n').filter(l => l.trim());
         lines.forEach(line => {
           const trimmed = line.trim();
@@ -2251,7 +2264,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (state.testimonials.length) {
-      if (state.refereesEnabled) internalChildren.push(h3('Testimonials'));
+      if (state.refereesEnabled) internalChildren.push(h3num('Testimonials'));
       const introBlock = findContentBlock(library, 'References/Testimonials Blurb');
       if (introBlock && introBlock.content) {
         introBlock.content.split('\n\n').forEach(para => { if (para.trim()) internalChildren.push(body(para.trim())); });
@@ -2276,7 +2289,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
     for (const sectionName of state.msrSections) {
       // Sub-topic heading (strip the "Multi-Site Rollout — " prefix)
-      internalChildren.push(h3(sectionName.replace(/^Multi-Site Rollout — /, '')));
+      internalChildren.push(h3num(sectionName.replace(/^Multi-Site Rollout — /, '')));
 
       if (sectionName === 'Multi-Site Rollout Experience Table') {
         const linkBlock = findLinkBlock(library, 'Multi-Site Rollout Experience Table');
@@ -2308,7 +2321,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     if (state.keyPeopleEnabled) buildKeyPeopleContent();
 
     for (const sectionName of state.optionalSections) {
-      internalChildren.push(h3(sectionName));
+      internalChildren.push(h3num(sectionName));
       const block = findContentBlock(library, sectionName);
       if (block && block.content) {
         renderRichContent(block.content).forEach(p => internalChildren.push(p));

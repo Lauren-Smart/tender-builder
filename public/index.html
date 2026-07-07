@@ -301,10 +301,13 @@
       <div class="section-header"><h2>Standard Inclusions</h2><p>These sections are included in every tender. Untick anything not required for this submission.</p></div>
       <div class="testimonial-hint">Post-Installation Support (Monitoring & Reporting, Warranty Support, and the product warranty table) is automatically included as its own section at the end of the document — no need to select it here.</div>
       <div class="check-group">
-        <div class="check-group-title">1. About Smart Commercial Energy</div>
+        <div class="check-group-title">Key Documents</div>
+        <label class="check-item checked" onclick="toggle(this)"><input type="checkbox" checked data-key="keydocs" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Key Documents</strong><span>Policies, Modern Slavery Policy, Procedures & Insurances — appears as the first section of the document</span></div></label>
+      </div>
+      <div class="check-group">
+        <div class="check-group-title">About Smart Commercial Energy</div>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Company History</strong></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Key Customers</strong><span>Logo grid & rollout experience table</span></div><span class="static-badge">Static</span></label>
-        <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Project Experience</strong></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Capability Statement</strong><span>Capability Statement & Customer Showcase</span></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Company Initiatives — Giving Back</strong><span>OneSun, Vanuatu, PNG</span></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>End of Life Process</strong></div><span class="static-badge">Static</span></label>
@@ -312,7 +315,7 @@
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Sustainability Reporting</strong></div><span class="static-badge">Static</span></label>
       </div>
       <div class="check-group">
-        <div class="check-group-title">2. Project Capabilities & Resources</div>
+        <div class="check-group-title">Project Capabilities & Resources</div>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Company Resources & Capacity</strong></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Project Team</strong><span>Projects team structure & capacity</span></div><span class="static-badge">Static</span></label>
         <label class="check-item static checked" onclick="toggle(this)"><input type="checkbox" checked tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Engineering Team</strong><span>Engineering team structure & capacity</span></div><span class="static-badge">Static</span></label>
@@ -509,13 +512,12 @@
       <div class="section-header"><h2>Optional Sections</h2><p>Select any additional sections to include in this tender.</p></div>
       <div class="check-group">
         <div class="check-group-title">Additional Information</div>
-        <div class="testimonial-hint">These appear under "6. Additional Information" at the end of the document.</div>
-        <label class="check-item checked" onclick="toggle(this)"><input type="checkbox" checked data-key="keydocs" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Key Documents</strong><span>Policies, Modern Slavery Policy, Procedures & Insurances — hyperlinked from Notion</span></div></label>
+        <div class="testimonial-hint">These appear under the "Additional Information" section at the end of the document.</div>
         <label class="check-item checked" onclick="toggle(this)"><input type="checkbox" checked data-key="keypeople" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Key People</strong><span>Leadership team table</span></div></label>
       </div>
       <div class="check-group">
         <div class="check-group-title">Multi-Site Rollout Capability</div>
-        <div class="testimonial-hint">Select individual sub-topics to include. Useful for multi-site or portfolio clients.</div>
+        <div class="testimonial-hint">Select individual sub-topics to include. When any are selected, Multi-Site Rollout Capability appears as its own section. Useful for multi-site or portfolio clients.</div>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-overview" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Capability Overview</strong><span>Stats, records, average variation rate</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-challenges" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Challenges We Solve</strong><span>Multi-contractor coordination, geographic spread, documentation</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-delivery" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Our Delivery Model</strong><span>Integrated teams, Procore, national supply chain</span></div></label>
@@ -1363,7 +1365,9 @@ refereesEnabled: false,
     }
   });
 
-  // Multi-Site Rollout sub-topics — map each checkbox to its exact Notion block name
+  // Multi-Site Rollout sub-topics — collected separately; when any are selected,
+  // Multi-Site Rollout Capability is rendered as its own top-level section.
+  state.msrSections = [];
   const MSR_KEY_TO_BLOCK = {
     'msr-overview': 'Multi-Site Rollout — Capability Overview',
     'msr-challenges': 'Multi-Site Rollout — Challenges We Solve',
@@ -1373,7 +1377,7 @@ refereesEnabled: false,
   };
   document.querySelectorAll('#step-5 input[data-key^="msr-"]').forEach(cb => {
     if (cb.closest('.check-item').classList.contains('checked')) {
-      state.optionalSections.push(MSR_KEY_TO_BLOCK[cb.dataset.key]);
+      state.msrSections.push(MSR_KEY_TO_BLOCK[cb.dataset.key]);
     }
   });
 
@@ -1391,7 +1395,7 @@ const refereesCb = document.querySelector('#step-5 input[data-key="referees"]');
 if (refereesCb && refereesCb.closest('.check-item').classList.contains('checked')) { state.refereesEnabled = true; }
 
   // Additional Information toggles — Key Documents & Key People
-  const keyDocsCb = document.querySelector('#step-5 input[data-key="keydocs"]');
+  const keyDocsCb = document.querySelector('#step-2 input[data-key="keydocs"]');
   state.keyDocsEnabled = !!(keyDocsCb && keyDocsCb.closest('.check-item').classList.contains('checked'));
   const keyPeopleCb = document.querySelector('#step-5 input[data-key="keypeople"]');
   state.keyPeopleEnabled = !!(keyPeopleCb && keyPeopleCb.closest('.check-item').classList.contains('checked'));
@@ -1451,6 +1455,29 @@ async function buildDocument(state, library) {
   const noBorder = { style: BorderStyle.NONE, size: 0, color: WHITE };
   const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
   const CW = 9638;
+
+  // ── Automatic section numbering ──
+  // Sections claim their number as they render, so toggling sections on/off
+  // never leaves gaps or wrong numbers.
+  let sectionCounter = 0;
+  const nextSectionNum = () => ++sectionCounter;
+
+  // Insert a page break before a new section — but only when there is prior
+  // content and we haven't just added one. Avoids blank pages when optional
+  // sections are switched off.
+  let lastBreakAt = -1;
+  function sectionBreak() {
+    if (internalChildren.length > 0 && lastBreakAt !== internalChildren.length) {
+        lastBreakAt = internalChildren.length;
+    }
+  }
+
+  // Some Notion link labels carry internal numbering (e.g. "1.4. Insurances").
+  // Present the Insurances folder link with a friendly client-facing label.
+  function cleanLinkLabel(label) {
+    if (/^[\d.\s]*insurances\s*$/i.test(label)) return 'Smart Commercial Energy Insurance Documents';
+    return label;
+  }
 
   function h1(text) {
     return new Paragraph({
@@ -1658,70 +1685,65 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     internalChildren.push(gap());
   }
 
-  // ── Key Documents content — rendered inside "6. Additional Information" ──
-  function buildKeyDocumentsContent() {
-    internalChildren.push(h3('Key Documents'));
+  // ── Key Documents — first top-level section of the document ──
+  function buildKeyDocumentsSection() {
+    if (!state.keyDocsEnabled) return;
+    sectionBreak();
+    internalChildren.push(h1(`${nextSectionNum()}. Key Documents`));
 
     // Policies — driven by Notion Category = "Policy"
-    {
-      internalChildren.push(h4('Policies'));
-      const policyLinks = findLinkBlocksByCategory(library, 'Policy');
-      if (policyLinks.length) {
-        policyLinks.forEach(b => {
-          const parsed = !isPlaceholderLink(b.content) ? parseMarkdownLink(b.content) : null;
-          if (parsed) internalChildren.push(bulletLink(parsed.label, parsed.url));
-          else internalChildren.push(bullet(b.blockName));
-        });
-      } else {
-        internalChildren.push(body('[No policy documents found — check Notion Category = "Policy"]', { color: 'B41E1E', italics: true }));
-      }
-      internalChildren.push(gap());
+    internalChildren.push(h3('Policies'));
+    const policyLinks = findLinkBlocksByCategory(library, 'Policy');
+    if (policyLinks.length) {
+      policyLinks.forEach(b => {
+        const parsed = !isPlaceholderLink(b.content) ? parseMarkdownLink(b.content) : null;
+        if (parsed) internalChildren.push(bulletLink(cleanLinkLabel(parsed.label), parsed.url));
+        else internalChildren.push(bullet(b.blockName));
+      });
+    } else {
+      internalChildren.push(body('[No policy documents found — check Notion Category = "Policy"]', { color: 'B41E1E', italics: true }));
     }
+    internalChildren.push(gap());
 
     // Modern Slavery Policy — single link block
-    {
-      internalChildren.push(h4('Modern Slavery Policy'));
-      const b = findLinkBlock(library, 'Modern Slavery Policy');
-      if (b && !isPlaceholderLink(b.content)) {
-        const parsed = parseMarkdownLink(b.content);
-        if (parsed) internalChildren.push(bulletLink(parsed.label, parsed.url));
-      } else {
-        internalChildren.push(body('[Modern Slavery Policy link not found in library]', { color: 'B41E1E', italics: true }));
-      }
-      internalChildren.push(gap());
+    internalChildren.push(h3('Modern Slavery Policy'));
+    const msp = findLinkBlock(library, 'Modern Slavery Policy');
+    if (msp && !isPlaceholderLink(msp.content)) {
+      const parsed = parseMarkdownLink(msp.content);
+      if (parsed) internalChildren.push(bulletLink(cleanLinkLabel(parsed.label), parsed.url));
+    } else {
+      internalChildren.push(body('[Modern Slavery Policy link not found in library]', { color: 'B41E1E', italics: true }));
     }
+    internalChildren.push(gap());
 
     // Procedures — driven by Notion Category = "Procedures"
-    {
-      internalChildren.push(h4('Procedures'));
-      const procLinks = findLinkBlocksByCategory(library, 'Procedures');
-      if (procLinks.length) {
-        procLinks.forEach(b => {
-          const parsed = !isPlaceholderLink(b.content) ? parseMarkdownLink(b.content) : null;
-          if (parsed) internalChildren.push(bulletLink(parsed.label, parsed.url));
-          else internalChildren.push(bullet(b.blockName));
-        });
-      } else {
-        internalChildren.push(body('[No procedure documents found — check Notion Category = "Procedures"]', { color: 'B41E1E', italics: true }));
-      }
-      internalChildren.push(gap());
+    internalChildren.push(h3('Procedures'));
+    const procLinks = findLinkBlocksByCategory(library, 'Procedures');
+    if (procLinks.length) {
+      procLinks.forEach(b => {
+        const parsed = !isPlaceholderLink(b.content) ? parseMarkdownLink(b.content) : null;
+        if (parsed) internalChildren.push(bulletLink(cleanLinkLabel(parsed.label), parsed.url));
+        else internalChildren.push(bullet(b.blockName));
+      });
+    } else {
+      internalChildren.push(body('[No procedure documents found — check Notion Category = "Procedures"]', { color: 'B41E1E', italics: true }));
     }
+    internalChildren.push(gap());
 
     // Insurances
-    {
-      internalChildren.push(h4('Insurances'));
-      const b = findLinkBlock(library, 'All Insurances');
-      if (b && !isPlaceholderLink(b.content)) {
-        const parsed = parseMarkdownLink(b.content);
-        if (parsed) internalChildren.push(bulletLink(parsed.label, parsed.url));
-      } else {
-        internalChildren.push(body('[All Insurances link not found in library]', { color: 'B41E1E', italics: true }));
-      }
-      internalChildren.push(gap());
+    internalChildren.push(h3('Insurances'));
+    const ins = findLinkBlock(library, 'All Insurances');
+    if (ins && !isPlaceholderLink(ins.content)) {
+      const parsed = parseMarkdownLink(ins.content);
+      if (parsed) internalChildren.push(bulletLink(cleanLinkLabel(parsed.label), parsed.url));
+    } else {
+      internalChildren.push(body('[All Insurances link not found in library]', { color: 'B41E1E', italics: true }));
     }
+    internalChildren.push(gap());
+
   }
 
-  // ── Key People content — rendered inside "6. Additional Information" ──
+  // ── Key People content — rendered inside the Additional Information section ──
   function buildKeyPeopleContent() {
     internalChildren.push(h3('Key People'));
     const block = findContentBlock(library, 'Key People');
@@ -1757,11 +1779,13 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   function buildAboutSection() {
     const inclusions = state.standardInclusions;
     const has = name => inclusions.some(n => n.toLowerCase() === name.toLowerCase());
-    const aboutItems = ['Company History', 'Key Customers', 'Project Experience', 'Capability Statement',
+    const aboutItems = ['Company History', 'Key Customers', 'Capability Statement',
       'Company Initiatives — Giving Back', 'End of Life Process', 'Modern Slavery Statement', 'Sustainability Reporting'];
     if (!aboutItems.some(i => has(i))) return;
 
-    internalChildren.push(h1('1. About Smart Commercial Energy'));
+    sectionBreak();
+
+    internalChildren.push(h1(`${nextSectionNum()}. About Smart Commercial Energy`));
 
     if (has('Company History')) {
       internalChildren.push(h3('Company History'));
@@ -1784,11 +1808,6 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       internalChildren.push(gap());
     }
 
-    if (has('Project Experience')) {
-      internalChildren.push(h3('Project Experience'));
-      renderContentBlock('Project Experience');
-    }
-
     if (has('Capability Statement')) {
       internalChildren.push(h3('Capability Statement'));
       const blurbBlock = findContentBlock(library, 'Capability Statement Blurb');
@@ -1796,15 +1815,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         const introLine = blurbBlock.content.split('\n')[0];
         if (introLine && introLine.trim()) internalChildren.push(body(introLine.trim()));
       }
-      const imageDataUrl = library.images && library.images['Capability Statement Graphic'];
-      if (imageDataUrl) {
-        const imgData = base64ToArrayBuffer(imageDataUrl);
-        if (imgData) {
-          internalChildren.push(gap());
-          internalChildren.push(new Paragraph({ children: [new ImageRun({ data: imgData, transformation: { width: 560, height: 315 }, type: 'png' })] }));
-        }
-      }
-      internalChildren.push(gap());
+      // Document links first...
       const docLinks = [
         findLinkBlock(library, 'Capability Statement Link'),
         findLinkBlock(library, 'Customer Showcase'),
@@ -1813,6 +1824,15 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         docLinks.forEach(b => { const parsed = parseMarkdownLink(b.content); if (parsed) internalChildren.push(bulletLink(parsed.label, parsed.url)); });
       } else {
         internalChildren.push(body('[No capability statement documents found in library yet]', { color: 'B41E1E', italics: true }));
+      }
+      // ...then the graphic below them
+      const imageDataUrl = library.images && library.images['Capability Statement Graphic'];
+      if (imageDataUrl) {
+        const imgData = base64ToArrayBuffer(imageDataUrl);
+        if (imgData) {
+          internalChildren.push(gap());
+          internalChildren.push(new Paragraph({ children: [new ImageRun({ data: imgData, transformation: { width: 560, height: 347 }, type: 'png' })] }));
+        }
       }
       internalChildren.push(gap());
     }
@@ -1843,7 +1863,6 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       }
     }
 
-    internalChildren.push(pageBreak());
   }
 
   // ── Section 3: Project Capabilities & Resources ──
@@ -1851,7 +1870,9 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     const inclusions = state.standardInclusions;
     const has = name => inclusions.some(n => n.toLowerCase() === name.toLowerCase());
 
-    internalChildren.push(h1('2. Project Capabilities & Resources'));
+    sectionBreak();
+
+    internalChildren.push(h1(`${nextSectionNum()}. Project Capabilities & Resources`));
 
     if (has('Company Resources & Capacity')) {
       internalChildren.push(h3('Company Resources & Capacity'));
@@ -1949,23 +1970,24 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       internalChildren.push(gap());
     }
 
-    internalChildren.push(pageBreak());
   }
 
   // ── Section 4: Solution Proposal ──
   async function buildSolutionProposalSection() {
     if (!state.proposal) return;
-    internalChildren.push(h1('3. Solution Proposal'));
+    sectionBreak();
+    const secNum = nextSectionNum();
+    internalChildren.push(h1(`${secNum}. Solution Proposal`));
     let subNum = 1;
 
     if (state.proposal.designNarrative) {
-      internalChildren.push(h2num(3, subNum++, 'Compliance Statement'));
+      internalChildren.push(h2num(secNum, subNum++, 'Compliance Statement'));
       renderStructuredText(state.proposal.designNarrative).forEach(p => internalChildren.push(p));
       internalChildren.push(gap());
     }
 
     if (state.proposal.lumpSumRows && state.proposal.lumpSumRows.length) {
-      internalChildren.push(h2num(3, subNum++, 'Lump Sum Price & Breakdown'));
+      internalChildren.push(h2num(secNum, subNum++, 'Lump Sum Price & Breakdown'));
       internalChildren.push(new Table({
         width: { size: CW, type: WidthType.DXA }, columnWidths: [4819, 2400, 2419],
         rows: [
@@ -1999,7 +2021,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       }));
       internalChildren.push(gap());
     } else if (state.proposal.customRows.length) {
-      internalChildren.push(h2num(3, subNum++, 'Specification'));
+      internalChildren.push(h2num(secNum, subNum++, 'Specification'));
       internalChildren.push(new Table({
         width: { size: CW, type: WidthType.DXA }, columnWidths: [4819, 4819],
         rows: state.proposal.customRows.map((row, i) => new TableRow({ children: [tableCell(row.label, 4819, i % 2 !== 0), tableCell(row.value, 4819, i % 2 !== 0)] }))
@@ -2008,13 +2030,13 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (state.proposal.installMethodology) {
-      internalChildren.push(h2num(3, subNum++, 'Installation Methodology'));
+      internalChildren.push(h2num(secNum, subNum++, 'Installation Methodology'));
       renderStructuredText(state.proposal.installMethodology).forEach(p => internalChildren.push(p));
       internalChildren.push(gap());
     }
 
     if (state.proposal.ganttFile || state.proposal.ganttLink) {
-      internalChildren.push(h2num(3, subNum++, 'Programme & Key Lead Times'));
+      internalChildren.push(h2num(secNum, subNum++, 'Programme & Key Lead Times'));
       internalChildren.push(body('See below link to download the high-level construction programme.'));
       if (state.proposal.ganttLink) internalChildren.push(hyperlinkPara('Programme & Key Lead Times Link', state.proposal.ganttLink));
       if (state.proposal.ganttFile) {
@@ -2025,7 +2047,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (state.proposal.sitePlans && state.proposal.sitePlans.length) {
-      internalChildren.push(h2num(3, subNum++, 'Site Plan'));
+      internalChildren.push(h2num(secNum, subNum++, 'Site Plan'));
       const multiSite = state.proposal.sitePlans.length > 1;
       for (const sp of state.proposal.sitePlans) {
         if (multiSite && sp.siteName) internalChildren.push(body(sp.siteName, { bold: true }));
@@ -2040,7 +2062,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (state.proposal.sldPlans && state.proposal.sldPlans.length) {
-      internalChildren.push(h2num(3, subNum++, 'Single Line Diagram'));
+      internalChildren.push(h2num(secNum, subNum++, 'Single Line Diagram'));
       const multiSld = state.proposal.sldPlans.length > 1;
       for (const sld of state.proposal.sldPlans) {
         if (multiSld && sld.siteName) internalChildren.push(body(sld.siteName, { bold: true }));
@@ -2056,7 +2078,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
     // Key Materials Supplied — Technology Suppliers (moved here from its own section)
     if (state.techEnabled) {
-      internalChildren.push(h2num(3, subNum++, 'Key Materials Supplied'));
+      internalChildren.push(h2num(secNum, subNum++, 'Key Materials Supplied'));
       if (state.selectedSuppliers.length === 0) {
         internalChildren.push(body('Smart Commercial Energy partners with leading Tier 1 manufacturers across solar panels, inverters and battery storage, selected for proven reliability, strong Australian support and bankability. Specific equipment for this project will be confirmed during the detailed design phase.'));
       } else {
@@ -2090,7 +2112,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (state.proposal.departuresRows && state.proposal.departuresRows.length) {
-      internalChildren.push(h2num(3, subNum++, 'Departures and Assumptions'));
+      internalChildren.push(h2num(secNum, subNum++, 'Departures and Assumptions'));
       internalChildren.push(body('See below.'));
       internalChildren.push(new Table({
         width: { size: CW, type: WidthType.DXA }, columnWidths: [4019, 1500, 1500, 2619],
@@ -2109,7 +2131,6 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       internalChildren.push(gap());
     }
 
-    internalChildren.push(pageBreak());
   }
 
   // ── Section 5: Post-Installation Support ──
@@ -2118,11 +2139,13 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     const hasWarrantyTable = state.techEnabled;
     if (!pi.monitoring && !pi.warrantySupport && !pi.inverterFootnote && !pi.responseTimes && !hasWarrantyTable) return;
 
-    internalChildren.push(h1('4. Post-Installation Support'));
+    sectionBreak();
+    const secNum = nextSectionNum();
+    internalChildren.push(h1(`${secNum}. Post-Installation Support`));
     let subNum = 1;
 
     if (pi.monitoring) {
-      internalChildren.push(h2num(4, subNum++, 'Monitoring & Reporting'));
+      internalChildren.push(h2num(secNum, subNum++, 'Monitoring & Reporting'));
       const monitoringBlock = findContentBlock(library, 'Monitoring & Reporting');
       if (monitoringBlock && monitoringBlock.content) {
         renderRichContent(monitoringBlock.content).forEach(p => internalChildren.push(p));
@@ -2131,7 +2154,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (pi.warrantySupport) {
-      internalChildren.push(h2num(4, subNum++, 'Warranty Support'));
+      internalChildren.push(h2num(secNum, subNum++, 'Warranty Support'));
       const warrantySupportBlock = findContentBlock(library, 'Warranty Support');
       if (warrantySupportBlock && warrantySupportBlock.content) {
         renderRichContent(warrantySupportBlock.content).forEach(p => internalChildren.push(p));
@@ -2140,7 +2163,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (hasWarrantyTable) {
-      internalChildren.push(h2num(4, subNum++, 'Product Warranty Summary'));
+      internalChildren.push(h2num(secNum, subNum++, 'Product Warranty Summary'));
       const supplierNames = state.selectedSuppliers.map(s => s.supplier);
       const racking = state.racking;
       const warrantyRows = [];
@@ -2173,7 +2196,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     if (pi.inverterFootnote) {
       const rtBlock = findContentBlock(library, 'Response Times');
       if (rtBlock && rtBlock.content) {
-        internalChildren.push(h2num(4, subNum++, 'Performance Team'));
+        internalChildren.push(h2num(secNum, subNum++, 'Performance Team'));
         const lines = rtBlock.content.split('\n').filter(l => l.trim());
         const rows = lines.map(line => line.split('|').map(c => c.trim()));
         if (rows.length) {
@@ -2194,7 +2217,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
 
     if (pi.responseTimes) {
-      internalChildren.push(h2num(4, subNum++, 'Response Times Matrix'));
+      internalChildren.push(h2num(secNum, subNum++, 'Response Times Matrix'));
       const block = findContentBlock(library, 'Response Times Matrix');
       if (block && block.content) {
         renderRichContent(block.content).forEach(p => internalChildren.push(p));
@@ -2202,13 +2225,13 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       internalChildren.push(gap());
     }
 
-    internalChildren.push(pageBreak());
   }
 
   // ── Section 6: References & Testimonials ──
   function buildTestimonialsSection() {
     if (!state.testimonials.length && !state.refereesEnabled) return;
-    internalChildren.push(h1('5. References & Testimonials'));
+    sectionBreak();
+    internalChildren.push(h1(`${nextSectionNum()}. References & Testimonials`));
 
     if (state.refereesEnabled) {
       const refBlock = findContentBlock(library, 'Referees Blurb');
@@ -2242,27 +2265,19 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         internalChildren.push(gap());
       }
     }
-    internalChildren.push(pageBreak());
   }
 
   // ── Section 6: Additional Information (Key Documents, Key People + optional sections) ──
-  function buildAdditionalInfoSection() {
-    if (!state.optionalSections.length && !state.keyDocsEnabled && !state.keyPeopleEnabled) return;
-    internalChildren.push(h1('6. Additional Information'));
+  // ── Multi-Site Rollout Capability — its own optional top-level section ──
+  function buildMultiSiteSection() {
+    if (!state.msrSections || !state.msrSections.length) return;
+    sectionBreak();
+    internalChildren.push(h1(`${nextSectionNum()}. Multi-Site Rollout Capability`));
 
-    if (state.keyDocsEnabled) buildKeyDocumentsContent();
-    if (state.keyPeopleEnabled) buildKeyPeopleContent();
+    for (const sectionName of state.msrSections) {
+      // Sub-topic heading (strip the "Multi-Site Rollout — " prefix)
+      internalChildren.push(h3(sectionName.replace(/^Multi-Site Rollout — /, '')));
 
-    let msrHeadingShown = false;
-    for (const sectionName of state.optionalSections) {
-      const isMsr = sectionName.startsWith('Multi-Site Rollout');
-      if (isMsr && !msrHeadingShown) {
-        internalChildren.push(h3('Multi-Site Rollout Capability'));
-        msrHeadingShown = true;
-      }
-      internalChildren.push(isMsr
-        ? new Paragraph({ spacing: { before: 160, after: 100 }, children: [new TextRun({ text: sectionName.replace(/^Multi-Site Rollout — /, ''), font: FONT_HEADING, size: 20, color: DEEP_PURPLE, bold: false })] })
-        : h3(sectionName));
       if (sectionName === 'Multi-Site Rollout Experience Table') {
         const linkBlock = findLinkBlock(library, 'Multi-Site Rollout Experience Table');
         if (linkBlock && !isPlaceholderLink(linkBlock.content)) {
@@ -2284,12 +2299,34 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     }
   }
 
+  // ── Additional Information — Key People + remaining optional content blocks ──
+  function buildAdditionalInfoSection() {
+    if (!state.optionalSections.length && !state.keyPeopleEnabled) return;
+    sectionBreak();
+    internalChildren.push(h1(`${nextSectionNum()}. Additional Information`));
+
+    if (state.keyPeopleEnabled) buildKeyPeopleContent();
+
+    for (const sectionName of state.optionalSections) {
+      internalChildren.push(h3(sectionName));
+      const block = findContentBlock(library, sectionName);
+      if (block && block.content) {
+        renderRichContent(block.content).forEach(p => internalChildren.push(p));
+      } else {
+        internalChildren.push(body(`[Content for "${sectionName}" not found in library]`, { color: 'B41E1E', italics: true }));
+      }
+      internalChildren.push(gap());
+    }
+  }
+
   // ── Build sections in the required order ──
+  buildKeyDocumentsSection();
   buildAboutSection();
   buildCapabilitiesSection();
   await buildSolutionProposalSection();
   buildPostInstallationSection();
   buildTestimonialsSection();
+  buildMultiSiteSection();
   buildAdditionalInfoSection();
 
 

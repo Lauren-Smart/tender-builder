@@ -1438,23 +1438,25 @@ async function buildDocument(state, library) {
 
   const INDIGO = "28066C", DEEP_PURPLE = "463282", SKY_BLUE = "6EC8F5",
         WHITE = "FFFFFF", DARK_GREY = "2A2A2A", SMART_GREY = "5E5E5E",
-        LIGHT_ROW = "F4F2FA";
+        LIGHT_GREY = "DFDFDF", PALE_BLUE = "E1F4FD",
+        LIGHT_ROW = "FAFAFC";
 
   const FONT_HEADING = "Barlow SemiBold";
   const FONT_BODY = "Overpass";
-  const BODY_SIZE = 22; // 11pt
-  const HEADING1_SIZE = 40; // 20pt
-  const HEADING2_SIZE = 22; // 11pt bold caps
+  const BODY_SIZE = 20; // 10pt per visual guide
+  const SUBTEXT_SIZE = 16; // 8pt per visual guide
+  const HEADING1_SIZE = 40; // 20pt page heading per visual guide
+  const HEADING2_SIZE = 24; // 12pt section headings per visual guide
 
   const logoImg = b64ToArrayBuffer(LOGO_B64);
   const fractalImg = b64ToArrayBuffer(FRACTAL_B64);
   const iconImg = b64ToArrayBuffer(ICON_B64);
 
-  const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: "DDDDDD" };
+  const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: LIGHT_GREY };
   const thinBorders = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
   const noBorder = { style: BorderStyle.NONE, size: 0, color: WHITE };
   const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
-  const CW = 9638;
+  const CW = 10204; // A4 width (11906) minus 2 x 1.5cm (851) margins
 
   // ── Automatic section numbering ──
   // Sections claim their number as they render, so toggling sections on/off
@@ -1484,15 +1486,15 @@ async function buildDocument(state, library) {
   function h1(text) {
     return new Paragraph({
       heading: HeadingLevel.HEADING_1,
-      spacing: { before: 400, after: 160 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: SKY_BLUE, space: 6 } },
+      spacing: { before: 400, after: 283 }, // 0.5cm to following content
+      border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: LIGHT_GREY, space: 6 } }, // divider: light grey, stroke 1
       children: [new TextRun({ text, font: FONT_HEADING, size: HEADING1_SIZE, color: INDIGO, bold: false })]
     });
   }
   function h2(text) {
     return new Paragraph({
-      spacing: { before: 280, after: 120 },
-      children: [new TextRun({ text, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
+      spacing: { before: 567, after: 283 },
+      children: [new TextRun({ text, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
   function body(text, opts = {}) {
@@ -1507,9 +1509,9 @@ async function buildDocument(state, library) {
   }
   function tableHeaderCell(text, width) {
     return new TableCell({
-      borders: thinBorders, shading: { fill: DEEP_PURPLE, type: ShadingType.CLEAR },
+      borders: thinBorders, shading: { fill: SKY_BLUE, type: ShadingType.CLEAR },
       margins: { top: 100, bottom: 100, left: 140, right: 140 }, width: { size: width, type: WidthType.DXA },
-      children: [new Paragraph({ children: [new TextRun({ text, font: FONT_HEADING, size: 18, color: WHITE, bold: false, allCaps: true })] })]
+      children: [new Paragraph({ children: [new TextRun({ text, font: FONT_BODY, size: BODY_SIZE, color: WHITE, bold: false, allCaps: true })] })]
     });
   }
   function tableCell(text, width, shaded = false) {
@@ -1517,7 +1519,7 @@ async function buildDocument(state, library) {
       borders: thinBorders, shading: { fill: shaded ? LIGHT_ROW : WHITE, type: ShadingType.CLEAR },
       margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: width, type: WidthType.DXA },
       verticalAlign: VerticalAlign.TOP,
-      children: [new Paragraph({ children: [new TextRun({ text: text || '', font: FONT_BODY, size: 18, color: DARK_GREY })] })]
+      children: [new Paragraph({ children: [new TextRun({ text: text || '', font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY })] })]
     });
   }
   function hyperlinkPara(label, url, opts = {}) {
@@ -1525,7 +1527,7 @@ async function buildDocument(state, library) {
       spacing: { before: 80, after: 80 },
       children: [new ExternalHyperlink({
         link: url,
-        children: [new TextRun({ text: label, font: FONT_BODY, size: opts.size || BODY_SIZE, color: SKY_BLUE, underline: {}, ...opts })]
+        children: [new TextRun({ text: label, font: FONT_BODY, size: opts.size || BODY_SIZE, color: INDIGO, underline: {}, ...opts })]
       })]
     });
   }
@@ -1536,36 +1538,37 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         new TextRun({ text: '•  ', font: FONT_BODY, size: BODY_SIZE, color: SKY_BLUE }),
         new ExternalHyperlink({
         link: url,
-        children: [new TextRun({ text: label, font: FONT_BODY, size: opts.size || BODY_SIZE, color: SKY_BLUE, underline: {}, ...opts })]
+        children: [new TextRun({ text: label, font: FONT_BODY, size: opts.size || BODY_SIZE, color: INDIGO, underline: {}, ...opts })]
       })]
     });
   }
 
-  // Numbered sub-heading, e.g. "4.1 Compliance Statement"
+  // Numbered sub-heading, e.g. "4.1 Compliance Statement" — SECTION HEADING 1 style
   function h2num(sectionNum, subNum, text) {
     return new Paragraph({
       heading: HeadingLevel.HEADING_2,
-      spacing: { before: 280, after: 120 },
-      children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
+      spacing: { before: 567, after: 283 }, // 1cm before new section, 0.5cm within
+      children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
 
-  // H3 subsection heading — used for document subsections within an H2 section.
+  // H3 subsection heading — SECTION HEADING 2 style: indigo text with a sky blue
+  // accent bar on the left (per visual guide: 3pt bar, 0.25cm gap to text).
   function h3(text) {
     return new Paragraph({
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 240, after: 100 },
-      children: [new TextRun({ text, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
+      spacing: { before: 567, after: 283 },
+      border: { left: { style: BorderStyle.SINGLE, size: 24, color: SKY_BLUE, space: 7 } },
+      children: [new TextRun({ text, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
 
-  // Auto-numbered H3 subsection heading, e.g. "1.1  Policies", "1.2  Modern Slavery Policy".
+  // Auto-numbered subsection heading — SECTION HEADING 1 style, e.g. "1.1  Policies".
   // Uses the current section number and increments the subsection counter automatically.
   function h3num(text) {
     return new Paragraph({
       heading: HeadingLevel.HEADING_2,
-      spacing: { before: 240, after: 100 },
-      children: [new TextRun({ text: `${sectionCounter}.${++subsectionCounter}  ${text}`, font: FONT_HEADING, size: HEADING2_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
+      spacing: { before: 567, after: 283 }, // 1cm before new section, 0.5cm within
+      children: [new TextRun({ text: `${sectionCounter}.${++subsectionCounter}  ${text}`, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
 
@@ -1573,8 +1576,8 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // (e.g. Policies / Procedures / Insurances within Key Documents).
   function h4(text) {
     return new Paragraph({
-      spacing: { before: 160, after: 100 },
-      children: [new TextRun({ text, font: FONT_HEADING, size: 20, color: DEEP_PURPLE, bold: false })]
+      spacing: { before: 283, after: 113 },
+      children: [new TextRun({ text, font: FONT_BODY, size: BODY_SIZE, color: SKY_BLUE, bold: false, allCaps: true })]
     });
   }
 
@@ -1769,17 +1772,17 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         return { name: name || namePart.trim(), title: title || '', bio: bioLines.join(' ').trim() };
       });
       internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [2200, 7438],
+        width: { size: CW, type: WidthType.DXA }, columnWidths: [2330, 7874],
         rows: rows.map((r, i) => new TableRow({ children: [
           new TableCell({
-            borders: thinBorders, shading: { fill: i % 2 !== 0 ? LIGHT_ROW : WHITE, type: ShadingType.CLEAR },
-            margins: { top: 100, bottom: 100, left: 140, right: 140 }, width: { size: 2200, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
+            borders: thinBorders, shading: { fill: PALE_BLUE, type: ShadingType.CLEAR },
+            margins: { top: 100, bottom: 100, left: 140, right: 140 }, width: { size: 2330, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
             children: [
-              new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: r.name, font: FONT_HEADING, size: 18, color: DEEP_PURPLE, bold: false, allCaps: true })] }),
-              new Paragraph({ children: [new TextRun({ text: r.title, font: FONT_BODY, size: 16, color: SMART_GREY, italics: true })] }),
+              new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: r.name, font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY, bold: true, allCaps: true })] }),
+              new Paragraph({ children: [new TextRun({ text: r.title, font: FONT_BODY, size: SUBTEXT_SIZE, color: SMART_GREY, italics: true })] }),
             ]
           }),
-          tableCell(r.bio, 7438, i % 2 !== 0),
+          tableCell(r.bio, 7874, i % 2 !== 0),
         ]}))
       }));
     } else {
@@ -1916,10 +1919,10 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     if (state.team.length) {
       internalChildren.push(h3num('Nominated Project Team'));
       internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [4819, 4819],
+        width: { size: CW, type: WidthType.DXA }, columnWidths: [5102, 5102],
         rows: [
-          new TableRow({ children: [tableHeaderCell('Name', 4819), tableHeaderCell('Role', 4819)] }),
-          ...state.team.map((member, i) => new TableRow({ children: [tableCell(member.name, 4819, i % 2 !== 0), tableCell(member.role, 4819, i % 2 !== 0)] }))
+          new TableRow({ children: [tableHeaderCell('Name', 5102), tableHeaderCell('Role', 5102)] }),
+          ...state.team.map((member, i) => new TableRow({ children: [tableCell(member.name, 5102, i % 2 !== 0), tableCell(member.role, 5102, i % 2 !== 0)] }))
         ]
       }));
       internalChildren.push(gap());
@@ -1947,11 +1950,11 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         });
         const periods = parsedRows[0]?.values.map(v => v.period) || [];
         internalChildren.push(new Table({
-          width: { size: CW, type: WidthType.DXA }, columnWidths: [4238, 1800, 1800, 1800],
+          width: { size: CW, type: WidthType.DXA }, columnWidths: [4504, 1900, 1900, 1900],
           rows: [
-            new TableRow({ children: [tableHeaderCell('Item', 4238), ...periods.map(p => tableHeaderCell(p, 1800))] }),
+            new TableRow({ children: [tableHeaderCell('Item', 4504), ...periods.map(p => tableHeaderCell(p, 1900))] }),
             ...parsedRows.map((row, i) => new TableRow({ children: [
-              tableCell(row.metric, 4238, i % 2 !== 0),
+              tableCell(row.metric, 4504, i % 2 !== 0),
               ...row.values.map(v => tableCell(v.value, 1800, i % 2 !== 0))
             ]}))
           ]
@@ -2002,32 +2005,32 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     if (state.proposal.lumpSumRows && state.proposal.lumpSumRows.length) {
       internalChildren.push(h2num(secNum, subNum++, 'Lump Sum Price & Breakdown'));
       internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [4819, 2400, 2419],
+        width: { size: CW, type: WidthType.DXA }, columnWidths: [5102, 2540, 2562],
         rows: [
-          new TableRow({ children: [tableHeaderCell('Item', 4819), tableHeaderCell('Price (Ex. GST)', 2400), tableHeaderCell('Notes', 2419)] }),
+          new TableRow({ children: [tableHeaderCell('Item', 5102), tableHeaderCell('Price (Ex. GST)', 2540), tableHeaderCell('Notes', 2562)] }),
           ...state.proposal.lumpSumRows.map((row, i) => {
             if (row.isSectionHeader) {
               return new TableRow({ children: [
                 new TableCell({
-                  borders: thinBorders, shading: { fill: LIGHT_ROW, type: ShadingType.CLEAR }, columnSpan: 3,
-                  margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 9638, type: WidthType.DXA },
-                  children: [new Paragraph({ children: [new TextRun({ text: row.item, font: FONT_HEADING, size: 18, color: DEEP_PURPLE, bold: false, allCaps: true })] })]
+                  borders: thinBorders, shading: { fill: PALE_BLUE, type: ShadingType.CLEAR }, columnSpan: 3,
+                  margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: CW, type: WidthType.DXA },
+                  children: [new Paragraph({ children: [new TextRun({ text: row.item, font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY, bold: true, allCaps: true })] })]
                 })
               ]});
             }
             const isTotal = row.item.toUpperCase().includes('TOTAL');
             if (isTotal) {
               return new TableRow({ children: [
-                new TableCell({ borders: thinBorders, shading: { fill: INDIGO, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 4819, type: WidthType.DXA },
-                  children: [new Paragraph({ children: [new TextRun({ text: row.item, font: FONT_HEADING, size: 18, color: WHITE, bold: false, allCaps: true })] })] }),
-                new TableCell({ borders: thinBorders, shading: { fill: INDIGO, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 2400, type: WidthType.DXA },
-                  children: [new Paragraph({ children: [new TextRun({ text: row.price, font: FONT_HEADING, size: 18, color: WHITE, bold: false })] })] }),
-                new TableCell({ borders: thinBorders, shading: { fill: INDIGO, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 2419, type: WidthType.DXA },
-                  children: [new Paragraph({ children: [new TextRun({ text: row.notes, font: FONT_BODY, size: 18, color: WHITE })] })] }),
+                new TableCell({ borders: thinBorders, shading: { fill: INDIGO, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 5102, type: WidthType.DXA },
+                  children: [new Paragraph({ children: [new TextRun({ text: row.item, font: FONT_BODY, size: BODY_SIZE, color: WHITE, bold: true, allCaps: true })] })] }),
+                new TableCell({ borders: thinBorders, shading: { fill: INDIGO, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 2540, type: WidthType.DXA },
+                  children: [new Paragraph({ children: [new TextRun({ text: row.price, font: FONT_BODY, size: BODY_SIZE, color: WHITE, bold: true })] })] }),
+                new TableCell({ borders: thinBorders, shading: { fill: INDIGO, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 2562, type: WidthType.DXA },
+                  children: [new Paragraph({ children: [new TextRun({ text: row.notes, font: FONT_BODY, size: BODY_SIZE, color: WHITE })] })] }),
               ]});
             }
             return new TableRow({
-              children: [tableCell(row.item, 4819, i % 2 !== 0), tableCell(row.price, 2400, i % 2 !== 0), tableCell(row.notes, 2419, i % 2 !== 0)]
+              children: [tableCell(row.item, 5102, i % 2 !== 0), tableCell(row.price, 2540, i % 2 !== 0), tableCell(row.notes, 2562, i % 2 !== 0)]
             });
           })
         ]
@@ -2036,8 +2039,8 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     } else if (state.proposal.customRows.length) {
       internalChildren.push(h2num(secNum, subNum++, 'Specification'));
       internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [4819, 4819],
-        rows: state.proposal.customRows.map((row, i) => new TableRow({ children: [tableCell(row.label, 4819, i % 2 !== 0), tableCell(row.value, 4819, i % 2 !== 0)] }))
+        width: { size: CW, type: WidthType.DXA }, columnWidths: [5102, 5102],
+        rows: state.proposal.customRows.map((row, i) => new TableRow({ children: [tableCell(row.label, 5102, i % 2 !== 0), tableCell(row.value, 5102, i % 2 !== 0)] }))
       }));
       internalChildren.push(gap());
     }
@@ -2128,12 +2131,12 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       internalChildren.push(h2num(secNum, subNum++, 'Departures and Assumptions'));
       internalChildren.push(body('See below.'));
       internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [4019, 1500, 1500, 2619],
+        width: { size: CW, type: WidthType.DXA }, columnWidths: [4304, 1600, 1600, 2700],
         rows: [
-          new TableRow({ children: [tableHeaderCell('Item', 4019), tableHeaderCell('Included', 1500), tableHeaderCell('Excluded', 1500), tableHeaderCell('Notes', 2619)] }),
+          new TableRow({ children: [tableHeaderCell('Item', 4304), tableHeaderCell('Included', 1600), tableHeaderCell('Excluded', 1600), tableHeaderCell('Notes', 2700)] }),
           ...state.proposal.departuresRows.map((row, i) => new TableRow({
             children: [
-              tableCell(row.item, 4019, i % 2 !== 0),
+              tableCell(row.item, 4304, i % 2 !== 0),
               tableCell(row.status === 'included' ? '✔' : '', 1500, i % 2 !== 0),
               tableCell(row.status === 'excluded' ? '✔' : '', 1500, i % 2 !== 0),
               tableCell(row.notes, 2619, i % 2 !== 0),
@@ -2196,10 +2199,10 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       }
       if (warrantyRows.length) {
         internalChildren.push(new Table({
-          width: { size: CW, type: WidthType.DXA }, columnWidths: [2400, 2400, 2419, 2419],
+          width: { size: CW, type: WidthType.DXA }, columnWidths: [2551, 2551, 2551, 2551],
           rows: [
-            new TableRow({ children: [tableHeaderCell('Supplier', 2400), tableHeaderCell('Equipment', 2400), tableHeaderCell('Product Warranty', 2419), tableHeaderCell('Performance Warranty', 2419)] }),
-            ...warrantyRows.map((row, i) => new TableRow({ children: row.map(cell => tableCell(cell, 2419, i % 2 !== 0)) }))
+            new TableRow({ children: [tableHeaderCell('Supplier', 2551), tableHeaderCell('Equipment', 2551), tableHeaderCell('Product Warranty', 2551), tableHeaderCell('Performance Warranty', 2551)] }),
+            ...warrantyRows.map((row, i) => new TableRow({ children: row.map(cell => tableCell(cell, 2551, i % 2 !== 0)) }))
           ]
         }));
         internalChildren.push(gap());
@@ -2404,15 +2407,15 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     coverLetterChildren.push(gap());
 
     coverLetterChildren.push(new Table({
-      width: { size: 9638, type: WidthType.DXA }, columnWidths: [4819, 4819],
+      width: { size: 10204, type: WidthType.DXA }, columnWidths: [5102, 5102],
       rows: [new TableRow({ children: [
-        new TableCell({ borders: noBorders, width: { size: 4819, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP, children: [
+        new TableCell({ borders: noBorders, width: { size: 5102, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP, children: [
           new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: state.rep.name.toUpperCase(), font: FONT_HEADING, size: 20, bold: false, color: INDIGO })] }),
           new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: state.rep.title, font: FONT_BODY, size: 19, color: DARK_GREY })] }),
           new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: state.rep.phone, font: FONT_BODY, size: 19, color: DARK_GREY })] }),
           new Paragraph({ spacing: { before: 0, after: 0 }, children: [new TextRun({ text: state.rep.email, font: FONT_BODY, size: 19, color: SKY_BLUE })] }),
         ]}),
-        new TableCell({ borders: noBorders, width: { size: 4819, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP, children: [
+        new TableCell({ borders: noBorders, width: { size: 5102, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP, children: [
           new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: 'KATHRYN HOOGESTEGER', font: FONT_HEADING, size: 20, bold: false, color: INDIGO })] }),
           new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'General Manager', font: FONT_BODY, size: 19, color: DARK_GREY })] }),
           new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: '0439 916 610', font: FONT_BODY, size: 19, color: DARK_GREY })] }),
@@ -2423,7 +2426,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   }
 
   const coverLetterSection = {
-    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 851, bottom: 851, left: 851 } } }, // 1.5cm margins per visual guide
     headers: { default: blankHeader },
     footers: { default: blankFooter },
     children: coverLetterChildren
@@ -2431,13 +2434,13 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── SECTION: Table of Contents (native Word field, auto-populates page numbers) ──
   const tocSection = {
-    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1300, right: 1134, bottom: 900, left: 1134, header: 500 } } },
+    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1100, right: 851, bottom: 851, left: 851, header: 400 } } }, // 1.5cm margins per visual guide
     headers: { default: internalHeader },
     footers: { default: internalFooter },
     children: [
       new Paragraph({
         spacing: { before: 200, after: 240 },
-        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: SKY_BLUE, space: 6 } },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: LIGHT_GREY, space: 6 } },
         children: [new TextRun({ text: 'Contents', font: FONT_HEADING, size: HEADING1_SIZE, color: INDIGO, bold: false })]
       }),
       new TableOfContents('Contents', { hyperlink: true, headingStyleRange: '1-2' }),
@@ -2451,7 +2454,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── SECTION 3: All internal content pages (icon header + page numbers) ──
   const internalSection = {
-    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1300, right: 1134, bottom: 900, left: 1134, header: 500 } } },
+    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1100, right: 851, bottom: 851, left: 851, header: 400 } } }, // 1.5cm margins per visual guide
     headers: { default: internalHeader },
     footers: { default: internalFooter },
     children: internalChildren

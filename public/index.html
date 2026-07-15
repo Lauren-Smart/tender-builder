@@ -106,6 +106,8 @@
   .team-check { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .team-card.selected .team-check { background: var(--indigo); border-color: var(--indigo); }
   .team-card.selected .team-check::after { content: ''; width: 4px; height: 8px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px); }
+  .team-card.locked { cursor: default; }
+  .team-card.locked:hover { border-color: var(--indigo); }
   .team-info .name { font-family: 'Barlow', sans-serif; font-weight: 600; font-size: 13px; color: var(--dark); }
   .team-info .role { font-size: 11px; color: var(--grey); margin-top: 2px; }
 
@@ -145,6 +147,20 @@
     gap: 10px;
     align-items: center;
     margin-bottom: 6px;
+  }
+  .program-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.8fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .program-row input[type="text"] {
+    padding: 7px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Overpass', sans-serif;
+    font-size: 13px;
   }
   .departures-header {
     font-family: 'Barlow', sans-serif;
@@ -478,7 +494,11 @@
 
     <!-- STEP 4: PROJECT TEAM -->
     <div class="section" id="step-4">
-      <div class="section-header"><h2>Project Team</h2><p>Select team members to include in the Nominated Project Team section. Leave all unselected to omit the section entirely.</p></div>
+      <div class="section-header"><h2>Project Team</h2><p>Select team members to include in the Nominated Project Team section. Ben Adamson is always included as Head of Projects & Performance.</p></div>
+      <div class="check-group-title">Head of Projects &amp; Performance</div>
+      <div class="team-grid" style="margin-bottom:20px">
+        <div class="team-card selected locked" data-key="ben"><div class="team-check"></div><div class="team-info"><div class="name">Ben Adamson</div><div class="role">Head of Projects &amp; Performance</div></div><span class="static-badge" style="margin-left:auto">Always included</span></div>
+      </div>
       <div class="check-group-title">Program Heads</div>
       <div class="team-grid" style="margin-bottom:20px">
         <div class="team-card" data-key="evert" onclick="toggleTeam(this)"><div class="team-check"></div><div class="team-info"><div class="name">Evert Willeumier</div><div class="role">Program Head</div></div></div>
@@ -500,6 +520,10 @@
         <div class="team-card" data-key="paddy" onclick="toggleTeam(this)"><div class="team-check"></div><div class="team-info"><div class="name">Paddy Anandbabu</div><div class="role">Project Engineer</div></div></div>
         <div class="team-card" data-key="thomas" onclick="toggleTeam(this)"><div class="team-check"></div><div class="team-info"><div class="name">Thomas Baguley</div><div class="role">Project Engineer</div></div></div>
         <div class="team-card" data-key="ed" onclick="toggleTeam(this)"><div class="team-check"></div><div class="team-info"><div class="name">Ed Hall</div><div class="role">Project Engineer</div></div></div>
+      </div>
+      <div class="check-group-title">Applications</div>
+      <div class="team-grid" style="margin-bottom:20px">
+        <div class="team-card" data-key="laura" onclick="toggleTeam(this)"><div class="team-check"></div><div class="team-info"><div class="name">Laura Butterworth</div><div class="role">Applications Coordinator</div></div></div>
       </div>
       <div class="nav-buttons">
         <button class="btn btn-secondary" onclick="prev()">← Back</button>
@@ -523,6 +547,18 @@
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-delivery" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Our Delivery Model</strong><span>Integrated teams, Procore, national supply chain</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-quotes" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Client Quotes</strong><span>Southern Steel, Bunnings, Officeworks</span></div></label>
         <label class="check-item" onclick="toggle(this)"><input type="checkbox" data-key="msr-table" tabindex="-1" onclick="event.stopPropagation()"><div class="check-box"></div><div class="check-text"><strong>Multi-Site Rollout Experience Table</strong><span>Visual summary of rollout projects by customer</span></div></label>
+      </div>
+      <div class="check-group">
+        <div class="check-group-title">Project Program</div>
+        <div class="testimonial-hint">When you write an objective or add milestones below, Project Program appears as its own section after the Solution Proposal — covering what we're aiming to achieve and the key dates. Leave everything empty to omit it.</div>
+        <div class="field" style="margin-bottom:14px">
+          <textarea id="programAims" rows="3" placeholder="What we're aiming to achieve (optional intro paragraph, e.g. practical completion ahead of the summer peak, staged delivery around site operations...)"></textarea>
+        </div>
+        <div class="departures-row departures-header program-row" style="margin-bottom:10px">
+          <span>Milestone</span><span>Date</span><span>Notes</span><span></span>
+        </div>
+        <div id="programRows"></div>
+        <button class="btn btn-secondary btn-small" onclick="addProgramRow()">+ Add Milestone</button>
       </div>
       <div class="check-group">
         <div class="check-group-title">Company</div>
@@ -742,7 +778,7 @@
 <script>
 let currentStep = 0;
 let techOn = false;
-const selectedTeam = new Set();
+const selectedTeam = new Set(['ben']); // Ben Adamson is always included
 
 const REPS = {
   huon:     { name: 'Huon Hoogesteger', title: 'Managing Director & Founder', phone: '0406 959 259', email: 'huon@smartcommercialenergy.com.au' },
@@ -928,6 +964,31 @@ function setDeparturesStatus(el, status) {
 
 function addDeparturesRow() {
   document.getElementById('departuresRows').appendChild(buildDeparturesRow());
+}
+
+// ── Project Program milestone rows ──
+function buildProgramRow(data = { milestone: '', date: '', notes: '' }) {
+  const row = document.createElement('div');
+  row.className = 'program-row';
+  row.innerHTML = `
+    <input type="text" class="prog-milestone" value="${data.milestone.replace(/"/g, '&quot;')}" placeholder="e.g. Contract award">
+    <input type="text" class="prog-date" value="${data.date.replace(/"/g, '&quot;')}" placeholder="e.g. Sep 2026">
+    <input type="text" class="prog-notes" value="${data.notes.replace(/"/g, '&quot;')}" placeholder="Notes (optional)">
+    <span class="remove-row" onclick="this.closest('.program-row').remove()">✕</span>
+  `;
+  return row;
+}
+
+function addProgramRow() {
+  document.getElementById('programRows').appendChild(buildProgramRow());
+}
+
+function getProgramRows() {
+  return [...document.querySelectorAll('#programRows .program-row')].map(row => ({
+    milestone: row.querySelector('.prog-milestone').value.trim(),
+    date: row.querySelector('.prog-date').value.trim(),
+    notes: row.querySelector('.prog-notes').value.trim(),
+  })).filter(r => r.milestone);
 }
 
 function initDeparturesRows() {
@@ -1296,6 +1357,10 @@ function gatherFormState() {
     selectedSuppliers: [],
     racking: techOn ? selectedRacking : null,
     team: [],
+    program: {
+      aims: document.getElementById('programAims').value.trim(),
+      milestones: getProgramRows()
+    },
     optionalSections: [],
     testimonials: [],
 refereesEnabled: false,
@@ -1326,17 +1391,17 @@ refereesEnabled: false,
     });
   }
 
-  // Project team (construction delivery — Program Heads, PMs, Engineers)
+  // Project team (construction delivery — Head of Projects, Program Heads, PMs, Engineers).
+  // Iterate cards in page order (not click order) so the document table always
+  // lists people in hierarchy order, with Ben Adamson first.
   const PERFORMANCE_TEAM_KEYS = ['danishi', 'barbara'];
-  selectedTeam.forEach(key => {
-    if (PERFORMANCE_TEAM_KEYS.includes(key)) return; // handled separately below
-    const card = document.querySelector(`.team-card[data-key="${key}"]`);
-    if (card) {
-      state.team.push({
-        name: card.querySelector('.name').textContent,
-        role: card.querySelector('.role').textContent
-      });
-    }
+  document.querySelectorAll('.team-card').forEach(card => {
+    const key = card.dataset.key;
+    if (!selectedTeam.has(key) || PERFORMANCE_TEAM_KEYS.includes(key)) return;
+    state.team.push({
+      name: card.querySelector('.name').textContent,
+      role: card.querySelector('.role').textContent
+    });
   });
 
   // Performance team (post-installation support)
@@ -1674,7 +1739,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // ── Section header used on every internal page: small icon, centred ──
   const internalHeader = new Header({
     children: [new Paragraph({
-      alignment: AlignmentType.CENTER, spacing: { before: 0, after: 280 },
+      alignment: AlignmentType.CENTER, spacing: { before: 0, after: 560 }, // doubled gap between logo and copy
       children: [new ImageRun({ data: iconImg, transformation: { width: 34, height: 34 }, type: 'png' })]
     })]
   });
@@ -1759,6 +1824,46 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   }
 
+  // ── Shared "people table" — pale blue name/role column + capability blurb column.
+  // Used by Key People (leadership) and Nominated Project Team. Each row is
+  // { name, title, bio, missing } where missing=true renders the bio as a red
+  // internal note instead of client-facing text.
+  function peopleTable(rows) {
+    return new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [2330, 7874],
+      rows: rows.map((r, i) => new TableRow({ children: [
+        new TableCell({
+          borders: thinBorders, shading: { fill: PALE_BLUE, type: ShadingType.CLEAR },
+          margins: { top: 100, bottom: 100, left: 140, right: 140 }, width: { size: 2330, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
+          children: [
+            new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: r.name, font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY, bold: true, allCaps: true })] }),
+            new Paragraph({ children: [new TextRun({ text: r.title, font: FONT_BODY, size: SUBTEXT_SIZE, color: SMART_GREY, italics: true })] }),
+          ]
+        }),
+        new TableCell({
+          borders: thinBorders, shading: { fill: i % 2 !== 0 ? LIGHT_ROW : WHITE, type: ShadingType.CLEAR },
+          margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 7874, type: WidthType.DXA },
+          verticalAlign: VerticalAlign.TOP,
+          children: [new Paragraph({ children: [new TextRun({ text: r.bio || '', font: FONT_BODY, size: BODY_SIZE, color: r.missing ? 'B41E1E' : DARK_GREY, italics: !!r.missing })] })]
+        }),
+      ]}))
+    });
+  }
+
+  // Finds a team member's capability blurb in the Notion library. Looks for a
+  // content block whose name contains the person's name plus "team bio",
+  // "capability" or starts with "bio" — so "Team Bio — Frank Placko",
+  // "Team Bio - Frank Placko" and "Bio: Frank Placko" all work.
+  function findTeamBio(library, personName) {
+    const n = personName.toLowerCase().trim();
+    const block = library.contentBlocks.find(b => {
+      const bn = (b.blockName || '').toLowerCase();
+      return bn.includes(n) && (bn.includes('team bio') || bn.includes('capabilit') || bn.startsWith('bio'));
+    });
+    if (block && block.content) return block.content.replace(/\n+/g, ' ').trim();
+    return null;
+  }
+
   // ── Key People content — rendered inside the Additional Information section ──
   function buildKeyPeopleContent() {
     internalChildren.push(h3num('Key People'));
@@ -1771,20 +1876,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         const [name, title] = namePart.split('|').map(s => s.trim());
         return { name: name || namePart.trim(), title: title || '', bio: bioLines.join(' ').trim() };
       });
-      internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [2330, 7874],
-        rows: rows.map((r, i) => new TableRow({ children: [
-          new TableCell({
-            borders: thinBorders, shading: { fill: PALE_BLUE, type: ShadingType.CLEAR },
-            margins: { top: 100, bottom: 100, left: 140, right: 140 }, width: { size: 2330, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
-            children: [
-              new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: r.name, font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY, bold: true, allCaps: true })] }),
-              new Paragraph({ children: [new TextRun({ text: r.title, font: FONT_BODY, size: SUBTEXT_SIZE, color: SMART_GREY, italics: true })] }),
-            ]
-          }),
-          tableCell(r.bio, 7874, i % 2 !== 0),
-        ]}))
-      }));
+      internalChildren.push(peopleTable(rows));
     } else {
       internalChildren.push(body('[Key People content not found in library]', { color: 'B41E1E', italics: true }));
     }
@@ -1915,16 +2007,21 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       renderContentBlock('Specific Project Team Resources');
     }
 
-    // Nominated Project Team — auto-generated from selected team members
+    // Nominated Project Team — Key People-style table built from the selected
+    // team members, with each person's capability blurb pulled from Notion
+    // (content block named "Team Bio — {Name}").
     if (state.team.length) {
       internalChildren.push(h3num('Nominated Project Team'));
-      internalChildren.push(new Table({
-        width: { size: CW, type: WidthType.DXA }, columnWidths: [5102, 5102],
-        rows: [
-          new TableRow({ children: [tableHeaderCell('Name', 5102), tableHeaderCell('Role', 5102)] }),
-          ...state.team.map((member, i) => new TableRow({ children: [tableCell(member.name, 5102, i % 2 !== 0), tableCell(member.role, 5102, i % 2 !== 0)] }))
-        ]
-      }));
+      const rows = state.team.map(member => {
+        const bio = findTeamBio(library, member.name);
+        return {
+          name: member.name,
+          title: member.role,
+          bio: bio || `[No capability blurb found — add a Notion content block named "Team Bio — ${member.name}"]`,
+          missing: !bio
+        };
+      });
+      internalChildren.push(peopleTable(rows));
       internalChildren.push(gap());
     }
 
@@ -2284,6 +2381,41 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   }
 
   // ── Section 6: Additional Information (Key Documents, Key People + optional sections) ──
+  // ── Project Program — its own optional top-level section, rendered only when
+  // an objective or at least one milestone has been entered ──
+  function buildProgramSection() {
+    const prog = state.program || {};
+    const hasAims = prog.aims && prog.aims.length;
+    const hasMilestones = prog.milestones && prog.milestones.length;
+    if (!hasAims && !hasMilestones) return;
+
+    sectionBreak();
+    internalChildren.push(h1(`${nextSectionNum()}. Project Program`));
+
+    if (hasAims) {
+      prog.aims.split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
+        internalChildren.push(body(line));
+      });
+      internalChildren.push(gap());
+    }
+
+    if (hasMilestones) {
+      internalChildren.push(h3num('Key Dates & Milestones'));
+      internalChildren.push(new Table({
+        width: { size: CW, type: WidthType.DXA }, columnWidths: [4304, 2200, 3700],
+        rows: [
+          new TableRow({ children: [tableHeaderCell('Milestone', 4304), tableHeaderCell('Date', 2200), tableHeaderCell('Notes', 3700)] }),
+          ...prog.milestones.map((m, i) => new TableRow({ children: [
+            tableCell(m.milestone, 4304, i % 2 !== 0),
+            tableCell(m.date, 2200, i % 2 !== 0),
+            tableCell(m.notes, 3700, i % 2 !== 0)
+          ]}))
+        ]
+      }));
+      internalChildren.push(gap());
+    }
+  }
+
   // ── Multi-Site Rollout Capability — its own optional top-level section ──
   function buildMultiSiteSection() {
     if (!state.msrSections || !state.msrSections.length) return;
@@ -2340,6 +2472,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   buildAboutSection();
   buildCapabilitiesSection();
   await buildSolutionProposalSection();
+  buildProgramSection();
   buildPostInstallationSection();
   buildTestimonialsSection();
   buildMultiSiteSection();
@@ -2434,7 +2567,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── SECTION: Table of Contents (native Word field, auto-populates page numbers) ──
   const tocSection = {
-    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1100, right: 851, bottom: 851, left: 851, header: 400 } } }, // 1.5cm margins per visual guide
+    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1560, right: 851, bottom: 851, left: 851, header: 400 } } }, // 1.5cm margins per visual guide
     headers: { default: internalHeader },
     footers: { default: internalFooter },
     children: [
@@ -2454,7 +2587,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── SECTION 3: All internal content pages (icon header + page numbers) ──
   const internalSection = {
-    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1100, right: 851, bottom: 851, left: 851, header: 400 } } }, // 1.5cm margins per visual guide
+    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1560, right: 851, bottom: 851, left: 851, header: 400 } } }, // 1.5cm margins per visual guide
     headers: { default: internalHeader },
     footers: { default: internalFooter },
     children: internalChildren

@@ -1613,7 +1613,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     return new Paragraph({
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 567, after: 283 }, // 1cm before new section, 0.5cm within
-      children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
+      children: [new TextRun({ text: `${sectionNum}.${subNum}  ${text}`, font: 'Barlow', size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
 
@@ -1621,9 +1621,9 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // accent bar on the left (per visual guide: 3pt bar, 0.25cm gap to text).
   function h3(text) {
     return new Paragraph({
-      spacing: { before: 567, after: 283 },
+      spacing: { before: 567, after: 283, line: 240, lineRule: 'exact' },
       border: { left: { style: BorderStyle.SINGLE, size: 24, color: SKY_BLUE, space: 7 } },
-      children: [new TextRun({ text, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
+      children: [new TextRun({ text, font: 'Barlow', size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
 
@@ -1633,7 +1633,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     return new Paragraph({
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 567, after: 283 }, // 1cm before new section, 0.5cm within
-      children: [new TextRun({ text: `${sectionCounter}.${++subsectionCounter}  ${text}`, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
+      children: [new TextRun({ text: `${sectionCounter}.${++subsectionCounter}  ${text}`, font: 'Barlow', size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
 
@@ -1939,7 +1939,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         const imgData = base64ToArrayBuffer(imageDataUrl);
         if (imgData) {
           internalChildren.push(gap());
-          internalChildren.push(new Paragraph({ children: [new ImageRun({ data: imgData, transformation: { width: 560, height: 347 }, type: 'png' })] }));
+          internalChildren.push(new Paragraph({ children: [new ImageRun({ data: imgData, transformation: { width: 560, height: 231 }, type: 'png' })] }));
         }
       }
       internalChildren.push(gap());
@@ -2458,8 +2458,17 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     for (const sectionName of state.optionalSections) {
       internalChildren.push(h3num(sectionName));
       const block = findContentBlock(library, sectionName);
+      const linkBlock = !block ? findLinkBlock(library, sectionName) : null;
       if (block && block.content) {
         renderRichContent(block.content).forEach(p => internalChildren.push(p));
+      } else if (linkBlock) {
+        // The block exists in Notion as a Link block (e.g. Cyber Security Statement).
+        const parsed = !isPlaceholderLink(linkBlock.content) ? parseMarkdownLink(linkBlock.content) : null;
+        if (parsed) {
+          internalChildren.push(bulletLink(cleanLinkLabel(parsed.label), parsed.url));
+        } else {
+          internalChildren.push(body(`[Found the "${linkBlock.blockName}" Link block in Notion, but its Content field ("${linkBlock.content || ''}") isn't a URL — paste the document link into that field]`, { color: 'B41E1E', italics: true }));
+        }
       } else {
         internalChildren.push(body(`[Content for "${sectionName}" not found in library]`, { color: 'B41E1E', italics: true }));
       }
@@ -2489,15 +2498,16 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     footers: { default: blankFooter, first: blankFooter },
     children: [
       new Table({
-        width: { size: 9638, type: WidthType.DXA },
-        columnWidths: [5800, 3838],
+        width: { size: 11906, type: WidthType.DXA },
+        columnWidths: [5800, 6106],
         rows: [new TableRow({
+          height: { value: 16700, rule: 'exact' }, cantSplit: true,
           children: [
             new TableCell({
               borders: noBorders, width: { size: 5800, type: WidthType.DXA }, verticalAlign: VerticalAlign.BOTTOM,
               margins: { top: 1134, bottom: 1134, left: 1134, right: 400 },
               children: [
-                new Paragraph({ spacing: { before: 7400, after: 400 }, children: [new ImageRun({ data: logoImg, transformation: { width: 190, height: 61 }, type: 'png' })] }),
+                new Paragraph({ spacing: { before: 0, after: 400 }, children: [new ImageRun({ data: logoImg, transformation: { width: 190, height: 61 }, type: 'png' })] }),
                 new Paragraph({ spacing: { before: 200, after: 100 }, children: [new TextRun({ text: state.client.name, font: FONT_HEADING, size: 72, bold: false, color: INDIGO })] }),
                 new Paragraph({ spacing: { before: 100, after: 160 }, children: [new TextRun({ text: state.client.projectDesc || state.client.systemSize || '', font: FONT_HEADING, size: 28, bold: false, color: SKY_BLUE })] }),
                 new Paragraph({ spacing: { before: 0, after: 0 }, children: [new TextRun({ text: 'SUBMISSION DOCUMENT', font: FONT_HEADING, size: 24, bold: false, color: DEEP_PURPLE, allCaps: true })] }),
@@ -2507,9 +2517,9 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
               ]
             }),
             new TableCell({
-              borders: noBorders, width: { size: 3838, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
-              margins: { top: 0, bottom: 0, left: 0, right: 0 },
-              children: [new Paragraph({ spacing: { before: 0, after: 0 }, children: [new ImageRun({ data: fractalImg, transformation: { width: 240, height: 700 }, type: 'png' })] })]
+              borders: noBorders, width: { size: 6106, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
+              margins: { top: 850, bottom: 0, left: 0, right: 850 },
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 0, after: 0 }, children: [new ImageRun({ data: fractalImg, transformation: { width: 168, height: 490 }, type: 'png' })] })]
             }),
           ]
         })]
@@ -2519,7 +2529,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── SECTION 2: Cover letter (no heading/subheading — straight into the letter) ──
   const coverLetterChildren = [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 400 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 800 },
       children: [new ImageRun({ data: logoImg, transformation: { width: 130, height: 42 }, type: 'png' })] }),
   ];
   if (state.rep) {
@@ -2593,7 +2603,12 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     children: internalChildren
   };
 
-  const doc = new Document({ sections: [coverSection, coverLetterSection, tocSection, internalSection] });
+  const doc = new Document({
+    styles: { default: {
+      heading2: { run: { font: 'Barlow', bold: false, color: INDIGO, size: HEADING2_SIZE } },
+    } },
+    sections: [coverSection, coverLetterSection, tocSection, internalSection]
+  });
 
   return Packer.toBlob(doc);
 }

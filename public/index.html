@@ -1559,7 +1559,7 @@ async function buildDocument(state, library) {
   function h2(text) {
     return new Paragraph({
       spacing: { before: 567, after: 283 },
-      children: [new TextRun({ text, font: FONT_BODY, size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
+      children: [new TextRun({ text, font: 'Barlow', size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
   }
   function body(text, opts = {}) {
@@ -1621,7 +1621,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // accent bar on the left (per visual guide: 3pt bar, 0.25cm gap to text).
   function h3(text) {
     return new Paragraph({
-      spacing: { before: 567, after: 283, line: 240, lineRule: 'exact' },
+      spacing: { before: 567, after: 283, line: 240, lineRule: 'exact' }, // exact 12pt line keeps the accent bar text-height
       border: { left: { style: BorderStyle.SINGLE, size: 24, color: SKY_BLUE, space: 7 } },
       children: [new TextRun({ text, font: 'Barlow', size: HEADING2_SIZE, color: INDIGO, bold: false, allCaps: true })]
     });
@@ -2458,16 +2458,17 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     for (const sectionName of state.optionalSections) {
       internalChildren.push(h3num(sectionName));
       const block = findContentBlock(library, sectionName);
-      const linkBlock = !block ? findLinkBlock(library, sectionName) : null;
+      const linkBlock = !block && findLinkBlock(library, sectionName); // Link-typed blocks (e.g. Cyber Security Statement)
       if (block && block.content) {
         renderRichContent(block.content).forEach(p => internalChildren.push(p));
-      } else if (linkBlock) {
-        // The block exists in Notion as a Link block (e.g. Cyber Security Statement).
-        const parsed = !isPlaceholderLink(linkBlock.content) ? parseMarkdownLink(linkBlock.content) : null;
+      } else if (linkBlock && linkBlock.content && !isPlaceholderLink(linkBlock.content)) {
+        const parsed = parseMarkdownLink(linkBlock.content);
         if (parsed) {
-          internalChildren.push(bulletLink(cleanLinkLabel(parsed.label), parsed.url));
+          internalChildren.push(hyperlinkPara(parsed.label, parsed.url));
         } else {
-          internalChildren.push(body(`[Found the "${linkBlock.blockName}" Link block in Notion, but its Content field ("${linkBlock.content || ''}") isn't a URL — paste the document link into that field]`, { color: 'B41E1E', italics: true }));
+          // Bare document reference (no URL in the Notion Content field)
+          internalChildren.push(body(linkBlock.content));
+          internalChildren.push(body(`[Tip: to make this a clickable link, edit the "${sectionName}" block in Notion and replace the Content text with a markdown link: [Document name](https://...)]`, { color: 'B41E1E', italics: true }));
         }
       } else {
         internalChildren.push(body(`[Content for "${sectionName}" not found in library]`, { color: 'B41E1E', italics: true }));
@@ -2498,13 +2499,13 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     footers: { default: blankFooter, first: blankFooter },
     children: [
       new Table({
-        width: { size: 11906, type: WidthType.DXA },
-        columnWidths: [5800, 6106],
+        width: { size: 11906, type: WidthType.DXA }, // full page width so the fractal reaches the right edge
+        columnWidths: [8068, 3838],
         rows: [new TableRow({
-          height: { value: 16700, rule: 'exact' }, cantSplit: true,
+          height: { value: 16700, rule: 'exact' }, cantSplit: true, // hard single-page lock — content can never spill to page 2
           children: [
             new TableCell({
-              borders: noBorders, width: { size: 5800, type: WidthType.DXA }, verticalAlign: VerticalAlign.BOTTOM,
+              borders: noBorders, width: { size: 8068, type: WidthType.DXA }, verticalAlign: VerticalAlign.BOTTOM,
               margins: { top: 1134, bottom: 1134, left: 1134, right: 400 },
               children: [
                 new Paragraph({ spacing: { before: 0, after: 400 }, children: [new ImageRun({ data: logoImg, transformation: { width: 190, height: 61 }, type: 'png' })] }),
@@ -2517,8 +2518,8 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
               ]
             }),
             new TableCell({
-              borders: noBorders, width: { size: 6106, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
-              margins: { top: 850, bottom: 0, left: 0, right: 850 },
+              borders: noBorders, width: { size: 3838, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
+              margins: { top: 0, bottom: 0, left: 0, right: 0 },
               children: [new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 0, after: 0 }, children: [new ImageRun({ data: fractalImg, transformation: { width: 168, height: 490 }, type: 'png' })] })]
             }),
           ]
@@ -2529,7 +2530,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   // ── SECTION 2: Cover letter (no heading/subheading — straight into the letter) ──
   const coverLetterChildren = [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 800 },
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 800 }, // doubled gap under logo
       children: [new ImageRun({ data: logoImg, transformation: { width: 130, height: 42 }, type: 'png' })] }),
   ];
   if (state.rep) {
@@ -2603,12 +2604,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     children: internalChildren
   };
 
-  const doc = new Document({
-    styles: { default: {
-      heading2: { run: { font: 'Barlow', bold: false, color: INDIGO, size: HEADING2_SIZE } },
-    } },
-    sections: [coverSection, coverLetterSection, tocSection, internalSection]
-  });
+  const doc = new Document({ sections: [coverSection, coverLetterSection, tocSection, internalSection] });
 
   return Packer.toBlob(doc);
 }

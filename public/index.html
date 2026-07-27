@@ -1499,7 +1499,9 @@ async function buildDocument(state, library) {
   const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
           AlignmentType, BorderStyle, WidthType, ShadingType, VerticalAlign,
           PageBreak, ImageRun, Header, Footer, PageNumber, ExternalHyperlink,
-          HeadingLevel, TableOfContents } = docx;
+          HeadingLevel, TableOfContents,
+          HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom,
+          TextWrappingType } = docx;
 
   const INDIGO = "28066C", DEEP_PURPLE = "463282", SKY_BLUE = "6EC8F5",
         WHITE = "FFFFFF", DARK_GREY = "2A2A2A", SMART_GREY = "5E5E5E",
@@ -2518,59 +2520,62 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     return out;
   }
 
-  // Vertical squeeze: every extra info line pulls the block up so the cover
-  // always stays on a single page.
+  // Auto-squeeze: pull the whole text block up as more reference lines are
+  // added, so a full 5-field cover still fits on a single page.
   const COVER_PAIRS = buildCoverPairs();
-  let coverShift = Math.max(0, COVER_PAIRS.length - 3) * 838;
-  const coverAccentBefore = Math.max(300, 900 - coverShift);
-  coverShift -= (900 - coverAccentBefore);
-  const coverTitleBefore = Math.max(300, 858 - coverShift);
+  const coverExtraPairs = Math.max(0, COVER_PAIRS.length - 3);
+  // Position the block so the last reference line lands ~50pt off the bottom
+  // (matching the example) whatever the field count: each extra pair adds
+  // height below, so the title starts correspondingly higher.
+  const coverTitleBefore = Math.max(3200, 6560 - coverExtraPairs * 660);
+  const coverAccentBefore = Math.max(500, 900 - coverExtraPairs * 120);
+
+  // Fractal as a page-anchored bleed image (top-right), exactly as the example
+  // cover does it. Living outside the text flow keeps it from pushing content
+  // onto a second page. 182.25 x 339.75 pt (= the 243x453px PNG at 96dpi),
+  // right edge 42.5pt (1.5cm) from the page's right edge, flush to the top.
+  const COVER_EMU = 12700; // EMU per point
+  const coverFractalW = 182.25, coverFractalH = 339.75;
+  const coverFractalX = 595.5 - 42.5 - coverFractalW; // 370.75pt from left
+  const coverFractalFloat = new ImageRun({
+    data: fractalImg,
+    transformation: { width: Math.round(coverFractalW), height: Math.round(coverFractalH) },
+    type: 'png',
+    floating: {
+      horizontalPosition: { relative: HorizontalPositionRelativeFrom.PAGE, offset: Math.round(coverFractalX * COVER_EMU) },
+      verticalPosition: { relative: VerticalPositionRelativeFrom.PAGE, offset: 0 },
+      wrap: { type: TextWrappingType.NONE },
+      behindDocument: false,
+    }
+  });
 
   // ── SECTION 1: Cover page (no header/footer) — matches example cover exactly ──
   const coverSection = {
     properties: {
-      page: { size: { width: 11906, height: 16838 }, margin: { top: 694, right: 850, bottom: 400, left: 850, header: 0, footer: 0 } },
+      page: { size: { width: 11906, height: 16838 }, margin: { top: 833, right: 850, bottom: 480, left: 850, header: 0, footer: 0 } },
       titlePage: true
     },
     headers: { default: blankHeader, first: blankHeader },
     footers: { default: blankFooter, first: blankFooter },
     children: [
-      // Top band: logo left, fractal right. The row height comes from the
-      // fractal itself rather than being locked to a fixed value.
-      new Table({
-        width: { size: 10206, type: WidthType.DXA },
-        columnWidths: [6206, 4000],
-        borders: noBorders,
-        rows: [new TableRow({
-          children: [
-            new TableCell({
-              borders: noBorders, width: { size: 6206, type: WidthType.DXA },
-              verticalAlign: VerticalAlign.TOP,
-              margins: { top: 0, bottom: 0, left: 0, right: 0 },
-              children: [new Paragraph({ spacing: { before: 0, after: 0 },
-                children: [new ImageRun({ data: logoImg, transformation: { width: 236, height: 76 }, type: 'png' })] })]
-            }),
-            new TableCell({
-              borders: noBorders, width: { size: 4000, type: WidthType.DXA },
-              verticalAlign: VerticalAlign.TOP,
-              margins: { top: 0, bottom: 0, left: 0, right: 0 },
-              children: [new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 0, after: 0 },
-                children: [new ImageRun({ data: fractalImg, transformation: { width: 243, height: 453 }, type: 'png' })] })]
-            }),
-          ]
-        })]
-      }),
+      // Logo top-left. Its first run carries the floating fractal anchor, so
+      // the fractal bleeds off the top-right of the page independent of flow.
+      new Paragraph({ spacing: { before: 0, after: 0 },
+        children: [
+          coverFractalFloat,
+          new ImageRun({ data: logoImg, transformation: { width: 236, height: 76 }, type: 'png' }),
+        ] }),
 
-      // Big two-line title — Barlow Regular 64pt indigo
-      new Paragraph({ spacing: { before: coverTitleBefore, after: 0, line: 1300, lineRule: 'exact' },
-        children: [new TextRun({ text: COVER_TITLE_1, font: 'Barlow', size: 128, bold: false, color: INDIGO, allCaps: true })] }),
-      new Paragraph({ spacing: { before: 0, after: 0, line: 1300, lineRule: 'exact' },
-        children: [new TextRun({ text: COVER_TITLE_2, font: 'Barlow', size: 128, bold: false, color: INDIGO, allCaps: true })] }),
+      // Big two-line title — Barlow Regular 52pt indigo. The large before-gap
+      // recreates the vertical space the fractal used to occupy in the flow.
+      new Paragraph({ spacing: { before: coverTitleBefore, after: 0, line: 1060, lineRule: 'exact' },
+        children: [new TextRun({ text: COVER_TITLE_1, font: 'Barlow', size: 104, bold: false, color: INDIGO, allCaps: true })] }),
+      new Paragraph({ spacing: { before: 0, after: 0, line: 1060, lineRule: 'exact' },
+        children: [new TextRun({ text: COVER_TITLE_2, font: 'Barlow', size: 104, bold: false, color: INDIGO, allCaps: true })] }),
 
-      // Sky blue accent bar + two lines
+      // Proposal descriptor — two lines, no accent bar
       new Paragraph({
         spacing: { before: coverAccentBefore, after: 0, line: 300, lineRule: 'atLeast' },
-        border: { left: { style: BorderStyle.SINGLE, size: 18, color: SKY_BLUE, space: 7 } },
         children: [
           new TextRun({ text: 'COMMERCIAL SOLAR & BATTERY PROPOSAL', font: FONT_BODY, size: 24, bold: true, color: INDIGO, allCaps: true }),
           new TextRun({ break: 1, text: 'PREPARED FOR', font: FONT_BODY, size: 24, bold: true, color: INDIGO, allCaps: true }),

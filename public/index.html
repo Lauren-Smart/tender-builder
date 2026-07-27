@@ -1506,6 +1506,9 @@ async function buildDocument(state, library) {
         LIGHT_GREY = "DFDFDF", PALE_BLUE = "E1F4FD",
         LIGHT_ROW = "FAFAFC";
 
+  // Cover page headline — two short words, each on its own line.
+  const COVER_TITLE_1 = "SUBMISSION";
+  const COVER_TITLE_2 = "DOCUMENT";
   const FONT_HEADING = "Barlow SemiBold";
   const FONT_BODY = "Overpass";
   const BODY_SIZE = 20; // 10pt per visual guide
@@ -2489,7 +2492,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
 
   // Cover page label/value pairs (LOCATION / DATE / TENDER # etc.)
-  function coverPairs() {
+  function buildCoverPairs() {
     const fmtDate = (v) => {
       if (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) { const [y, m, d] = v.split('-'); return `${d}.${m}.${y}`; }
       if (v) return v;
@@ -2501,61 +2504,85 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
     if (state.client.tenderName) pairs.push(['TENDER', state.client.tenderName]);
     if (state.client.projectNumber) pairs.push(['PROJECT #', state.client.projectNumber]);
     if (state.client.tenderNumber) pairs.push(['TENDER #', state.client.tenderNumber]);
+    return pairs;
+  }
+
+  // Render the label/value pairs. Spacing tightens if there are many of them.
+  function coverPairs(pairs) {
     const out = [];
+    const tight = pairs.length >= 5 ? 300 : 332;
     pairs.forEach(([label, value], i) => {
-      out.push(new Paragraph({ spacing: { before: i === 0 ? 520 : 320, after: 40 }, children: [new TextRun({ text: label, font: FONT_BODY, size: 20, bold: true, color: SKY_BLUE, allCaps: true })] }));
+      out.push(new Paragraph({ spacing: { before: i === 0 ? 300 : tight, after: 0 }, children: [new TextRun({ text: label, font: FONT_BODY, size: 20, bold: true, color: SKY_BLUE, allCaps: true })] }));
       out.push(new Paragraph({ spacing: { before: 0, after: 0 }, children: [new TextRun({ text: value, font: FONT_BODY, size: 20, color: DARK_GREY })] }));
     });
     return out;
   }
 
+  // Vertical squeeze: every extra info line pulls the block up so the cover
+  // always stays on a single page.
+  const COVER_PAIRS = buildCoverPairs();
+  let coverShift = Math.max(0, COVER_PAIRS.length - 3) * 838;
+  const coverAccentBefore = Math.max(300, 900 - coverShift);
+  coverShift -= (900 - coverAccentBefore);
+  const coverTitleBefore = Math.max(300, 858 - coverShift);
+
   // ── SECTION 1: Cover page (no header/footer) — matches example cover exactly ──
   const coverSection = {
     properties: {
-      page: { size: { width: 11906, height: 16838 }, margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+      page: { size: { width: 11906, height: 16838 }, margin: { top: 694, right: 850, bottom: 400, left: 850, header: 0, footer: 0 } },
       titlePage: true
     },
     headers: { default: blankHeader, first: blankHeader },
     footers: { default: blankFooter, first: blankFooter },
     children: [
+      // Top band: logo left, fractal right. The row height comes from the
+      // fractal itself rather than being locked to a fixed value.
       new Table({
-        width: { size: 11906, type: WidthType.DXA },
-        columnWidths: [7400, 4506],
+        width: { size: 10206, type: WidthType.DXA },
+        columnWidths: [6206, 4000],
+        borders: noBorders,
         rows: [new TableRow({
-          height: { value: 16700, rule: 'exact' }, cantSplit: true,
           children: [
             new TableCell({
-              borders: noBorders, width: { size: 7400, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
-              margins: { top: 694, bottom: 400, left: 850, right: 0 },
-              children: [
-                // Logo — 177pt x 57pt, top-left, matching example
-                new Paragraph({ spacing: { before: 0, after: 0 }, children: [new ImageRun({ data: logoImg, transformation: { width: 236, height: 76 }, type: 'png' })] }),
-                // Big two-line title — Barlow Regular 64pt indigo, 63.8pt exact line spacing
-                new Paragraph({ spacing: { before: 6020, after: 0, line: 1276, lineRule: 'exact' }, children: [new TextRun({ text: 'SUBMISSION', font: 'Barlow', size: 128, bold: false, color: INDIGO, allCaps: true })] }),
-                new Paragraph({ spacing: { before: 0, after: 0, line: 1276, lineRule: 'exact' }, children: [new TextRun({ text: 'DOCUMENT', font: 'Barlow', size: 128, bold: false, color: INDIGO, allCaps: true })] }),
-                // Accent block — 2.2pt sky blue bar, Overpass Bold 12pt indigo caps
-                new Paragraph({
-                  spacing: { before: 1260, after: 0, line: 332, lineRule: 'exact' },
-                  border: { left: { style: BorderStyle.SINGLE, size: 18, color: SKY_BLUE, space: 7 } },
-                  children: [
-                    new TextRun({ text: 'COMMERCIAL SOLAR & BATTERY PROPOSAL', font: FONT_BODY, size: 24, bold: true, color: INDIGO, allCaps: true }),
-                    new TextRun({ break: 1, text: 'PREPARED FOR', font: FONT_BODY, size: 24, bold: true, color: INDIGO, allCaps: true }),
-                  ]
-                }),
-                // Client name — Overpass Bold 24pt indigo
-                new Paragraph({ spacing: { before: 330, after: 0 }, children: [new TextRun({ text: state.client.name, font: FONT_BODY, size: 48, bold: true, color: INDIGO })] }),
-                // LOCATION / DATE / number pairs
-                ...coverPairs(),
-              ]
+              borders: noBorders, width: { size: 6206, type: WidthType.DXA },
+              verticalAlign: VerticalAlign.TOP,
+              margins: { top: 0, bottom: 0, left: 0, right: 0 },
+              children: [new Paragraph({ spacing: { before: 0, after: 0 },
+                children: [new ImageRun({ data: logoImg, transformation: { width: 236, height: 76 }, type: 'png' })] })]
             }),
             new TableCell({
-              borders: noBorders, width: { size: 4506, type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
-              margins: { top: 0, bottom: 0, left: 0, right: 850 },
-              children: [new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 0, after: 0 }, children: [new ImageRun({ data: fractalImg, transformation: { width: 243, height: 453 }, type: 'png' })] })]
+              borders: noBorders, width: { size: 4000, type: WidthType.DXA },
+              verticalAlign: VerticalAlign.TOP,
+              margins: { top: 0, bottom: 0, left: 0, right: 0 },
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 0, after: 0 },
+                children: [new ImageRun({ data: fractalImg, transformation: { width: 243, height: 453 }, type: 'png' })] })]
             }),
           ]
         })]
       }),
+
+      // Big two-line title — Barlow Regular 64pt indigo
+      new Paragraph({ spacing: { before: coverTitleBefore, after: 0, line: 1300, lineRule: 'exact' },
+        children: [new TextRun({ text: COVER_TITLE_1, font: 'Barlow', size: 128, bold: false, color: INDIGO, allCaps: true })] }),
+      new Paragraph({ spacing: { before: 0, after: 0, line: 1300, lineRule: 'exact' },
+        children: [new TextRun({ text: COVER_TITLE_2, font: 'Barlow', size: 128, bold: false, color: INDIGO, allCaps: true })] }),
+
+      // Sky blue accent bar + two lines
+      new Paragraph({
+        spacing: { before: coverAccentBefore, after: 0, line: 300, lineRule: 'atLeast' },
+        border: { left: { style: BorderStyle.SINGLE, size: 18, color: SKY_BLUE, space: 7 } },
+        children: [
+          new TextRun({ text: 'COMMERCIAL SOLAR & BATTERY PROPOSAL', font: FONT_BODY, size: 24, bold: true, color: INDIGO, allCaps: true }),
+          new TextRun({ break: 1, text: 'PREPARED FOR', font: FONT_BODY, size: 24, bold: true, color: INDIGO, allCaps: true }),
+        ]
+      }),
+
+      // Client name — Overpass Bold 24pt indigo
+      new Paragraph({ spacing: { before: 492, after: 0 },
+        children: [new TextRun({ text: state.client.name, font: FONT_BODY, size: 48, bold: true, color: INDIGO })] }),
+
+      // LOCATION / DATE / reference numbers
+      ...coverPairs(COVER_PAIRS),
     ]
   };
 

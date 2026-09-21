@@ -1849,7 +1849,9 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
           borders: thinBorders, shading: { fill: i % 2 !== 0 ? LIGHT_ROW : WHITE, type: ShadingType.CLEAR },
           margins: { top: 80, bottom: 80, left: 140, right: 140 }, width: { size: 7874, type: WidthType.DXA },
           verticalAlign: VerticalAlign.TOP,
-          children: [new Paragraph({ children: [new TextRun({ text: r.bio || '', font: FONT_BODY, size: BODY_SIZE, color: r.missing ? 'B41E1E' : DARK_GREY, italics: !!r.missing })] })]
+          children: Array.isArray(r.bio)
+            ? r.bio
+            : [new Paragraph({ children: [new TextRun({ text: r.bio || '', font: FONT_BODY, size: BODY_SIZE, color: r.missing ? 'B41E1E' : DARK_GREY, italics: !!r.missing })] })]
         }),
       ]}))
     });
@@ -1859,14 +1861,46 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // content block whose name contains the person's name plus "team bio",
   // "capability" or starts with "bio" — so "Team Bio — Frank Placko",
   // "Team Bio - Frank Placko" and "Bio: Frank Placko" all work.
+  // Returns the raw multi-line text unchanged — line breaks are preserved so
+  // renderBioBullets() can turn each line into its own bullet point.
   function findTeamBio(library, personName) {
     const n = personName.toLowerCase().trim();
     const block = library.contentBlocks.find(b => {
       const bn = (b.blockName || '').toLowerCase();
       return bn.includes(n) && (bn.includes('team bio') || bn.includes('capabilit') || bn.startsWith('bio'));
     });
-    if (block && block.content) return block.content.replace(/\n+/g, ' ').trim();
+    if (block && block.content) return block.content.trim();
     return null;
+  }
+
+  // Turns a team member's Q&A-style bio (one field per line, e.g.
+  // "What qualifications are held: B. Laws") into a bulleted list — one
+  // bullet per line, with the "Label:" part bolded where present. Drops a
+  // leading "Name | Title" line if the bio starts with one, since that's
+  // already shown in the table's name/title column.
+  function renderBioBullets(rawBio, personName) {
+    const lines = rawBio.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length && personName) {
+      const first = lines[0].toLowerCase();
+      if (first.includes(personName.toLowerCase()) && first.includes('|')) lines.shift();
+    }
+    if (!lines.length) return [new Paragraph({ children: [] })];
+    return lines.map(line => {
+      const labelMatch = line.match(/^([^:]{2,60}):\s*(.+)$/);
+      return new Paragraph({
+        spacing: { before: 40, after: 40 }, indent: { left: 260, hanging: 260 },
+        children: labelMatch
+          ? [
+              new TextRun({ text: '•  ', font: FONT_BODY, size: BODY_SIZE, color: SKY_BLUE }),
+              new TextRun({ text: labelMatch[1] + ': ', font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY, bold: true }),
+              new TextRun({ text: labelMatch[2], font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY })
+            ]
+          : [
+              new TextRun({ text: '•  ', font: FONT_BODY, size: BODY_SIZE, color: SKY_BLUE }),
+              new TextRun({ text: line, font: FONT_BODY, size: BODY_SIZE, color: DARK_GREY })
+            ]
+      });
+    });
   }
 
   // ── Key People content — rendered inside the Additional Information section ──
@@ -1913,10 +1947,24 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
       if (block && block.content) {
         renderRichContent(block.content).forEach(p => internalChildren.push(p));
       }
-      const graphicBlock = findLinkBlock(library, 'Key Customers Graphic');
-      if (graphicBlock && !isPlaceholderLink(graphicBlock.content)) {
-        const parsed = parseMarkdownLink(graphicBlock.content);
-        if (parsed) { internalChildren.push(gap()); internalChildren.push(hyperlinkPara(parsed.label, parsed.url)); }
+      // The logo grid image itself — a "Linked Graphic" block in Notion with the
+      // actual file attached (same pattern as the Capability Statement Graphic).
+      const logoImageDataUrl = library.images && library.images['Key Customers Graphic'];
+      if (logoImageDataUrl) {
+        const imgData = base64ToArrayBuffer(logoImageDataUrl);
+        if (imgData) {
+          internalChildren.push(gap());
+          internalChildren.push(new Paragraph({ children: [new ImageRun({ data: imgData, transformation: { width: 560, height: 280 }, type: 'png' })] }));
+        }
+      } else {
+        const graphicBlock = findLinkBlock(library, 'Key Customers Graphic');
+        if (graphicBlock && !isPlaceholderLink(graphicBlock.content)) {
+          const parsed = parseMarkdownLink(graphicBlock.content);
+          if (parsed) { internalChildren.push(gap()); internalChildren.push(hyperlinkPara(parsed.label, parsed.url)); }
+        } else {
+          internalChildren.push(gap());
+          internalChildren.push(body('[Key Customers logo image not found — in Notion, set "Key Customers Graphic" to Block Type "Linked Graphic" and attach the logo grid image under Files & media]', { color: 'B41E1E', italics: true }));
+        }
       }
       internalChildren.push(gap());
     }
@@ -2022,7 +2070,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
         return {
           name: member.name,
           title: member.role,
-          bio: bio || `[No capability blurb found — add a Notion content block named "Team Bio — ${member.name}"]`,
+          bio: bio ? renderBioBullets(bio, member.name) : `[No capability blurb found — add a Notion content block named "Team Bio — ${member.name}"]`,
           missing: !bio
         };
       });
@@ -2090,7 +2138,20 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
 
   }
 
-  // ── Section 4: Solution Proposal ──
+  // ── Proposal — a blank placeholder section, always included, positioned
+  // right after Project Capabilities & Resources. This is deliberately empty
+  // (heading only, then blank paragraphs) so reps can paste their own written
+  // proposal straight into the Word file after export. Separate from the
+  // structured Solution Proposal builder below, which is unaffected.
+  function buildProposalPlaceholderSection() {
+    sectionBreak();
+    internalChildren.push(h1(`${nextSectionNum()}. Proposal`));
+    internalChildren.push(new Paragraph({ spacing: { before: 80, after: 80 }, children: [] }));
+    internalChildren.push(new Paragraph({ spacing: { before: 80, after: 80 }, children: [] }));
+    internalChildren.push(new Paragraph({ spacing: { before: 80, after: 80 }, children: [] }));
+  }
+
+  // ── Section 5: Solution Proposal ──
   async function buildSolutionProposalSection() {
     if (!state.proposal) return;
     sectionBreak();
@@ -2485,6 +2546,7 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   buildKeyDocumentsSection();
   buildAboutSection();
   buildCapabilitiesSection();
+  buildProposalPlaceholderSection();
   await buildSolutionProposalSection();
   buildProgramSection();
   buildPostInstallationSection();

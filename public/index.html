@@ -1879,14 +1879,25 @@ spacing: { before: 60, after: 60 }, indent: { left: 400, hanging: 280 },
   // leading "Name | Title" line if the bio starts with one, since that's
   // already shown in the table's name/title column.
   function renderBioBullets(rawBio, personName) {
-    const lines = rawBio.split('\n').map(l => l.trim()).filter(Boolean);
+    let lines = rawBio.split('\n').map(l => l.trim()).filter(Boolean);
     if (lines.length && personName) {
       const first = lines[0].toLowerCase();
       if (first.includes(personName.toLowerCase()) && first.includes('|')) lines.shift();
     }
+    // The "Notable successes..." sentence is usually written straight into the
+    // same line as "Years of experience...", not on its own line in Notion.
+    // Split it out here so it always renders as its own fourth bullet, whether
+    // or not whoever wrote the bio gave it a line break.
+    lines = lines.flatMap(line => {
+      const m = line.match(/\bNotable successes?\b\s*:?\s*(.*)$/i);
+      if (!m || m.index === 0) return [line];
+      const before = line.slice(0, m.index).trim();
+      const rest = `Notable Successes: ${m[1].trim()}`;
+      return before ? [before, rest] : [rest];
+    });
     if (!lines.length) return [new Paragraph({ children: [] })];
     return lines.map(line => {
-      const labelMatch = line.match(/^([^:]{2,60}):\s*(.+)$/);
+      const labelMatch = line.match(/^([^:]{2,100}):\s*(.+)$/);
       return new Paragraph({
         spacing: { before: 40, after: 40 }, indent: { left: 260, hanging: 260 },
         children: labelMatch
